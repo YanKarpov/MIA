@@ -1,0 +1,25 @@
+# Все текстовые файлы — LF
+* text=auto eol=lf
+
+# Python
+*.py text eol=lf
+*.pyc binary
+
+# JSON/YAML
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Логи
+*.log text eol=lf
+
+# Игнорируемые бинарники Minecraft
+minecraft/plugins/*.jar binary
+
+# Postgres данные (бинарные)
+data/postgres/** binary
+
+# Кэш Python
+__pycache__/ binary
+ml-service/__pycache__/ binary
+ml-service/*.egg-info/ binary
