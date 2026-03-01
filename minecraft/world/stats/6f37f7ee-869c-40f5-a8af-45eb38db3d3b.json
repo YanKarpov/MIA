@@ -1,12 +1,21 @@
 {
   "stats": {
+    "minecraft:picked_up": {
+      "minecraft:bamboo": 5
+    },
     "minecraft:custom": {
-      "minecraft:time_since_rest": 7162,
-      "minecraft:walk_one_cm": 21,
-      "minecraft:total_world_time": 7162,
-      "minecraft:leave_game": 2,
-      "minecraft:play_time": 7162,
-      "minecraft:time_since_death": 7162
+      "minecraft:sprint_one_cm": 3281,
+      "minecraft:time_since_rest": 9165,
+      "minecraft:fall_one_cm": 1154,
+      "minecraft:walk_one_cm": 1530,
+      "minecraft:total_world_time": 9165,
+      "minecraft:leave_game": 4,
+      "minecraft:fly_one_cm": 1948,
+      "minecraft:damage_taken": 131,
+      "minecraft:play_time": 9165,
+      "minecraft:climb_one_cm": 12,
+      "minecraft:jump": 18,
+      "minecraft:time_since_death": 9165
     }
   },
   "DataVersion": 4671

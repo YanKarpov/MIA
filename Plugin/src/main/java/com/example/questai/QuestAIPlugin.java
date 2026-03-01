@@ -21,10 +21,22 @@ public class QuestAIPlugin extends JavaPlugin {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player player)) return true;
+
+        if (!(sender instanceof Player player)) {
+            return true;
+        }
 
         if (command.getName().equalsIgnoreCase("quest")) {
-            player.sendMessage(Component.text("Nice work!").color(NamedTextColor.GREEN));
+
+            Quest quest = QuestGenerator.generateQuest();
+
+            player.sendMessage(Component.text(
+                    "New quest: " +
+                    quest.getType() + " " +
+                    quest.getAmount() + " " +
+                    quest.getTarget()
+            ).color(NamedTextColor.GREEN));
+
             return true;
         }
 

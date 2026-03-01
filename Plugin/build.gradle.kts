@@ -18,3 +18,14 @@ dependencies {
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
+
+tasks.register<Copy>("copyToServer") {
+    dependsOn("build")
+    from(layout.buildDirectory.dir("libs"))
+    include("*.jar")
+    into("../minecraft/plugins")
+}
+
+tasks.build {
+    finalizedBy("copyToServer")
+}
