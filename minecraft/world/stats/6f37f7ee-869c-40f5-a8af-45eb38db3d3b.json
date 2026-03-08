@@ -1,23 +1,68 @@
 {
   "stats": {
     "minecraft:used": {
-      "minecraft:sand": 14,
-      "minecraft:cow_spawn_egg": 5,
-      "minecraft:diamond_sword": 6,
+      "minecraft:spruce_wood": 20,
+      "minecraft:sand": 45,
+      "minecraft:cow_spawn_egg": 29,
+      "minecraft:diamond_sword": 79,
       "minecraft:dirt": 9
     },
-    "minecraft:dropped": {
-      "minecraft:sand": 24,
-      "minecraft:spruce_wood": 1,
-      "minecraft:cow_spawn_egg": 1,
-      "minecraft:stick": 2,
-      "minecraft:dirt": 3
+    "minecraft:killed": {
+      "minecraft:husk": 2,
+      "minecraft:creeper": 2,
+      "minecraft:chicken": 1,
+      "minecraft:cow": 29,
+      "minecraft:squid": 1,
+      "minecraft:camel": 1
+    },
+    "minecraft:picked_up": {
+      "minecraft:ink_sac": 2,
+      "minecraft:dirt": 20,
+      "minecraft:stick": 4,
+      "minecraft:bamboo": 11,
+      "minecraft:feather": 2,
+      "minecraft:chicken": 1,
+      "minecraft:leather": 60,
+      "minecraft:beef": 75,
+      "minecraft:rotten_flesh": 1,
+      "minecraft:spruce_wood": 5,
+      "minecraft:cow_spawn_egg": 2,
+      "minecraft:firefly_bush": 2,
+      "minecraft:sand": 59,
+      "minecraft:wheat_seeds": 3
+    },
+    "minecraft:killed_by": {
+      "minecraft:spider": 1,
+      "minecraft:husk": 1
+    },
+    "minecraft:custom": {
+      "minecraft:time_since_rest": 82923,
+      "minecraft:walk_one_cm": 43300,
+      "minecraft:leave_game": 51,
+      "minecraft:walk_under_water_one_cm": 1877,
+      "minecraft:mob_kills": 36,
+      "minecraft:damage_taken": 591,
+      "minecraft:play_time": 118388,
+      "minecraft:damage_dealt": 4210,
+      "minecraft:jump": 481,
+      "minecraft:time_since_death": 82887,
+      "minecraft:drop": 36,
+      "minecraft:sprint_one_cm": 79748,
+      "minecraft:fall_one_cm": 14844,
+      "minecraft:total_world_time": 118388,
+      "minecraft:swim_one_cm": 18719,
+      "minecraft:fly_one_cm": 190945,
+      "minecraft:walk_on_water_one_cm": 3504,
+      "minecraft:crouch_one_cm": 922,
+      "minecraft:sneak_time": 1000,
+      "minecraft:climb_one_cm": 413,
+      "minecraft:deaths": 2
     },
     "minecraft:mined": {
       "minecraft:short_grass": 10,
       "minecraft:firefly_bush": 2,
       "minecraft:fern": 8,
-      "minecraft:sand": 36,
+      "minecraft:sand": 38,
       "minecraft:dirt": 7,
       "minecraft:podzol": 2,
       "minecraft:grass_block": 13,
@@ -25,49 +70,14 @@
       "minecraft:jungle_leaves": 4,
       "minecraft:bamboo": 1
     },
-    "minecraft:killed": {
-      "minecraft:cow": 4,
-      "minecraft:squid": 1
-    },
-    "minecraft:custom": {
-      "minecraft:time_since_rest": 16186,
-      "minecraft:walk_one_cm": 22620,
-      "minecraft:leave_game": 32,
-      "minecraft:walk_under_water_one_cm": 1877,
-      "minecraft:mob_kills": 5,
-      "minecraft:damage_taken": 541,
-      "minecraft:play_time": 51651,
-      "minecraft:damage_dealt": 709,
-      "minecraft:jump": 383,
-      "minecraft:time_since_death": 16150,
-      "minecraft:drop": 14,
-      "minecraft:sprint_one_cm": 61223,
-      "minecraft:fall_one_cm": 14844,
-      "minecraft:total_world_time": 51651,
-      "minecraft:swim_one_cm": 18719,
-      "minecraft:fly_one_cm": 149758,
-      "minecraft:walk_on_water_one_cm": 3504,
-      "minecraft:crouch_one_cm": 757,
-      "minecraft:sneak_time": 607,
-      "minecraft:climb_one_cm": 413,
-      "minecraft:deaths": 2
-    },
-    "minecraft:killed_by": {
-      "minecraft:spider": 1,
-      "minecraft:husk": 1
-    },
-    "minecraft:picked_up": {
-      "minecraft:ink_sac": 2,
-      "minecraft:dirt": 20,
-      "minecraft:spruce_wood": 1,
-      "minecraft:cow_spawn_egg": 1,
-      "minecraft:firefly_bush": 2,
-      "minecraft:stick": 4,
-      "minecraft:bamboo": 11,
-      "minecraft:sand": 47,
-      "minecraft:wheat_seeds": 3,
-      "minecraft:leather": 5,
-      "minecraft:beef": 5
+    "minecraft:dropped": {
+      "minecraft:sand": 36,
+      "minecraft:spruce_wood": 5,
+      "minecraft:cow_spawn_egg": 2,
+      "minecraft:beef": 19,
+      "minecraft:stick": 2,
+      "minecraft:dirt": 3,
+      "minecraft:leather": 29
     }
   },
   "DataVersion": 4671

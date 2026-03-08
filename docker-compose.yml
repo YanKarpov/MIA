@@ -2,35 +2,6 @@ version: "3.9"
 
 services:
 
-  minecraft:
-    image: itzg/minecraft-server:latest
-    container_name: minecraft
-    environment:
-      EULA: "true"
-      TYPE: "PAPER"
-      LANG: "en_US.UTF-8"
-      JVM_OPTS: "-Dfile.encoding=UTF-8"
-    ports:
-      - "25565:25565"
-    volumes:
-      - ./minecraft/plugins:/data/plugins
-      - ./minecraft/world:/data/world
-    depends_on:
-      - ml
-      - db
-    networks:
-      - net
-
-  ml:
-    build: ./ml-service
-    container_name: ml-service
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-    networks:
-      - net
-
   db:
     image: postgres:15
     container_name: postgres
@@ -42,6 +13,30 @@ services:
       - "5432:5432"
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d quests"]
+      interval: 5s
+      retries: 5
+      start_period: 5s
+
+  minecraft:
+    image: itzg/minecraft-server:latest
+    container_name: minecraft-dev
+    environment:
+      EULA: "true"
+      TYPE: "PAPER"
+      MEMORY: "2G"
+    ports:
+      - "25565:25565"
+    volumes:
+      - ./minecraft/plugins:/data/plugins
+      - ./minecraft/world:/data/world
+      - ./minecraft/ops.json:/data/ops.json
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - net
 
