@@ -6,6 +6,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 
 public class QuestListener implements Listener {
 
@@ -15,21 +17,47 @@ public class QuestListener implements Listener {
         this.plugin = plugin;
     }
 
+    // Ломание блоков
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-
         QuestProgress progress = plugin.getActiveQuests().get(player.getUniqueId());
         if (progress == null) return;
 
-        // Любой блок подходит
         if ("Break".equals(progress.getQuest().getType())) {
             progress.increment();
-
-            // Обновляем ActionBar с прогрессом
             plugin.updateActionBar(player, progress);
+            plugin.checkCompletion(player, progress);
+        }
+    }
 
-            // Проверяем, выполнен ли квест
+    // Убийство мобов
+    @EventHandler
+    public void onEntityKill(EntityDeathEvent event) {
+        if (event.getEntity().getKiller() == null) return;
+        if (!(event.getEntity().getKiller() instanceof Player)) return;
+
+        Player player = (Player) event.getEntity().getKiller();
+        QuestProgress progress = plugin.getActiveQuests().get(player.getUniqueId());
+        if (progress == null) return;
+
+        if ("Kill".equals(progress.getQuest().getType())) {
+            progress.increment();
+            plugin.updateActionBar(player, progress);
+            plugin.checkCompletion(player, progress);
+        }
+    }
+
+    // Сбор предметов
+    @EventHandler
+    public void onItemPickup(PlayerPickupItemEvent event) {
+        Player player = event.getPlayer();
+        QuestProgress progress = plugin.getActiveQuests().get(player.getUniqueId());
+        if (progress == null) return;
+
+        if ("Collect".equals(progress.getQuest().getType())) {
+            progress.increment();
+            plugin.updateActionBar(player, progress);
             plugin.checkCompletion(player, progress);
         }
     }

@@ -65,11 +65,23 @@ public class QuestPlugin extends JavaPlugin {
             activeQuests.put(player.getUniqueId(), progress);
             updateActionBar(player, progress);
 
-            player.sendMessage(Component.text(
-                    "New quest started: Break " +
-                    quest.getAmount() + " blocks!"
-            ).color(NamedTextColor.GREEN));
+            // Выводим текст в зависимости от типа квеста
+            String msg;
+            switch (quest.getType()) {
+                case "Break":
+                    msg = "New quest started: Break " + quest.getAmount() + " blocks!";
+                    break;
+                case "Kill":
+                    msg = "New quest started: Kill " + quest.getAmount() + " mobs!";
+                    break;
+                case "Collect":
+                    msg = "New quest started: Collect " + quest.getAmount() + " items!";
+                    break;
+                default:
+                    msg = "New quest started!";
+            }
 
+            player.sendMessage(Component.text(msg).color(NamedTextColor.GREEN));
             return true;
         }
 
@@ -78,11 +90,23 @@ public class QuestPlugin extends JavaPlugin {
 
     // Обновление ActionBar
     public void updateActionBar(Player player, QuestProgress progress) {
+        String progressText;
+        switch (progress.getQuest().getType()) {
+            case "Break":
+                progressText = progress.getCurrent() + "/" + progress.getQuest().getAmount() + " blocks broken";
+                break;
+            case "Kill":
+                progressText = progress.getCurrent() + "/" + progress.getQuest().getAmount() + " mobs killed";
+                break;
+            case "Collect":
+                progressText = progress.getCurrent() + "/" + progress.getQuest().getAmount() + " items collected";
+                break;
+            default:
+                progressText = progress.getCurrent() + "/" + progress.getQuest().getAmount();
+        }
+
         player.sendActionBar(Component.text(
-                "Quest: " +
-                progress.getQuest().getType() + " " +
-                progress.getCurrent() + "/" +
-                progress.getQuest().getAmount() + " blocks broken"
+                "Quest [" + progress.getQuest().getType() + "]: " + progressText
         ).color(NamedTextColor.GREEN));
     }
 

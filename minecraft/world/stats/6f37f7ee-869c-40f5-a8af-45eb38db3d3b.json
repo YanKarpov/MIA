@@ -2,56 +2,72 @@
   "stats": {
     "minecraft:used": {
       "minecraft:sand": 14,
+      "minecraft:cow_spawn_egg": 5,
+      "minecraft:diamond_sword": 6,
       "minecraft:dirt": 9
     },
-    "minecraft:picked_up": {
-      "minecraft:dirt": 20,
-      "minecraft:firefly_bush": 2,
-      "minecraft:stick": 2,
-      "minecraft:bamboo": 11,
-      "minecraft:sand": 27,
-      "minecraft:wheat_seeds": 3
-    },
-    "minecraft:killed_by": {
-      "minecraft:spider": 1
-    },
-    "minecraft:custom": {
-      "minecraft:time_since_rest": 10429,
-      "minecraft:walk_one_cm": 14183,
-      "minecraft:leave_game": 21,
-      "minecraft:walk_under_water_one_cm": 369,
-      "minecraft:damage_taken": 386,
-      "minecraft:damage_dealt": 59,
-      "minecraft:play_time": 35068,
-      "minecraft:jump": 290,
-      "minecraft:time_since_death": 10348,
-      "minecraft:drop": 8,
-      "minecraft:sprint_one_cm": 48150,
-      "minecraft:fall_one_cm": 12069,
-      "minecraft:swim_one_cm": 14570,
-      "minecraft:total_world_time": 35068,
-      "minecraft:fly_one_cm": 62590,
-      "minecraft:walk_on_water_one_cm": 1108,
-      "minecraft:crouch_one_cm": 364,
-      "minecraft:sneak_time": 181,
-      "minecraft:climb_one_cm": 197,
-      "minecraft:deaths": 1
-    },
     "minecraft:dropped": {
-      "minecraft:sand": 10,
+      "minecraft:sand": 24,
+      "minecraft:spruce_wood": 1,
+      "minecraft:cow_spawn_egg": 1,
       "minecraft:stick": 2,
       "minecraft:dirt": 3
     },
     "minecraft:mined": {
+      "minecraft:short_grass": 10,
       "minecraft:firefly_bush": 2,
-      "minecraft:short_grass": 9,
-      "minecraft:fern": 7,
-      "minecraft:sand": 30,
+      "minecraft:fern": 8,
+      "minecraft:sand": 36,
       "minecraft:dirt": 7,
       "minecraft:podzol": 2,
       "minecraft:grass_block": 13,
       "minecraft:dead_bush": 1,
+      "minecraft:jungle_leaves": 4,
       "minecraft:bamboo": 1
+    },
+    "minecraft:killed": {
+      "minecraft:cow": 4,
+      "minecraft:squid": 1
+    },
+    "minecraft:custom": {
+      "minecraft:time_since_rest": 16186,
+      "minecraft:walk_one_cm": 22620,
+      "minecraft:leave_game": 32,
+      "minecraft:walk_under_water_one_cm": 1877,
+      "minecraft:mob_kills": 5,
+      "minecraft:damage_taken": 541,
+      "minecraft:play_time": 51651,
+      "minecraft:damage_dealt": 709,
+      "minecraft:jump": 383,
+      "minecraft:time_since_death": 16150,
+      "minecraft:drop": 14,
+      "minecraft:sprint_one_cm": 61223,
+      "minecraft:fall_one_cm": 14844,
+      "minecraft:total_world_time": 51651,
+      "minecraft:swim_one_cm": 18719,
+      "minecraft:fly_one_cm": 149758,
+      "minecraft:walk_on_water_one_cm": 3504,
+      "minecraft:crouch_one_cm": 757,
+      "minecraft:sneak_time": 607,
+      "minecraft:climb_one_cm": 413,
+      "minecraft:deaths": 2
+    },
+    "minecraft:killed_by": {
+      "minecraft:spider": 1,
+      "minecraft:husk": 1
+    },
+    "minecraft:picked_up": {
+      "minecraft:ink_sac": 2,
+      "minecraft:dirt": 20,
+      "minecraft:spruce_wood": 1,
+      "minecraft:cow_spawn_egg": 1,
+      "minecraft:firefly_bush": 2,
+      "minecraft:stick": 4,
+      "minecraft:bamboo": 11,
+      "minecraft:sand": 47,
+      "minecraft:wheat_seeds": 3,
+      "minecraft:leather": 5,
+      "minecraft:beef": 5
     }
   },
   "DataVersion": 4671

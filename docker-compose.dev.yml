@@ -13,3 +13,4 @@ services:
     volumes:
       - ./minecraft/plugins:/data/plugins
       - ./minecraft/world:/data/world
+      - ./minecraft/ops.json:/data/ops.json

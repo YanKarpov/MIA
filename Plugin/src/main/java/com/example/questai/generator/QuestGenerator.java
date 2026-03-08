@@ -6,13 +6,35 @@ import java.util.Random;
 public class QuestGenerator {
 
     private static final Random rand = new Random();
+    private static final String[] TYPES = {"Break", "Kill", "Collect"};
 
     public static Quest generateQuest() {
         Quest q = new Quest();
-        q.setType("Break");       // Квест на слом блоков
-        q.setTarget("ANY");       // Любой блокп
-        q.setAmount(rand.nextInt(3) + 1); // Рандомное количество 1-3
-        q.setReward("5 XP");
+
+        // Выбираем тип квеста
+        String type = TYPES[rand.nextInt(TYPES.length)];
+        q.setType(type);
+
+        switch (type) {
+            case "Break":
+                q.setTarget("ANY"); 
+                q.setAmount(rand.nextInt(3) + 1);
+                q.setReward("5 XP");
+                break;
+
+            case "Kill":
+                q.setTarget("ANY"); 
+                q.setAmount(rand.nextInt(3) + 1);
+                q.setReward("10 XP");
+                break;
+
+            case "Collect":
+                q.setTarget("ANY");
+                q.setAmount(rand.nextInt(2) + 1);
+                q.setReward("15 XP");
+                break;
+        }
+
         return q;
     }
 }
