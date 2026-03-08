@@ -26,6 +26,11 @@ tasks.register<Copy>("copyToServer") {
     into("../minecraft/plugins")
 }
 
-tasks.build {
-    finalizedBy("copyToServer")
+tasks.register<Exec>("restartServer") {
+    commandLine("docker", "restart", "minecraft-dev")
+}
+
+tasks.register("deploy") {
+    dependsOn("copyToServer")
+    finalizedBy("restartServer")
 }
