@@ -1,10 +1,20 @@
 package com.example.questai.model;
 
 public class Quest {
-    private String type;    
-    private String target;  
-    private int amount;     
-    private String reward;  
+
+    private int id;
+    private String type;
+    private String target;
+    private int amount;
+    private int reward;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
@@ -15,6 +25,6 @@ public class Quest {
     public int getAmount() { return amount; }
     public void setAmount(int amount) { this.amount = amount; }
 
-    public String getReward() { return reward; }
-    public void setReward(String reward) { this.reward = reward; }
+    public int getReward() { return reward; }   
+    public void setReward(int reward) { this.reward = reward; }
 }

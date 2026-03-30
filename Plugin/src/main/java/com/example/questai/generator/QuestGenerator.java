@@ -11,27 +11,26 @@ public class QuestGenerator {
     public static Quest generateQuest() {
         Quest q = new Quest();
 
-        // Выбираем тип квеста
         String type = TYPES[rand.nextInt(TYPES.length)];
         q.setType(type);
 
         switch (type) {
             case "Break":
-                q.setTarget("ANY"); 
+                q.setTarget("ANY");
                 q.setAmount(rand.nextInt(3) + 1);
-                q.setReward("5 XP");
+                q.setReward(5); 
                 break;
 
             case "Kill":
-                q.setTarget("ANY"); 
+                q.setTarget("ANY");
                 q.setAmount(rand.nextInt(3) + 1);
-                q.setReward("10 XP");
+                q.setReward(10);
                 break;
 
             case "Collect":
                 q.setTarget("ANY");
                 q.setAmount(rand.nextInt(2) + 1);
-                q.setReward("15 XP");
+                q.setReward(15);
                 break;
         }
 

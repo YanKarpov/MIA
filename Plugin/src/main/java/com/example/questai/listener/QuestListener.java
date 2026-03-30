@@ -7,6 +7,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 
 public class QuestListener implements Listener {
@@ -35,9 +36,8 @@ public class QuestListener implements Listener {
     @EventHandler
     public void onEntityKill(EntityDeathEvent event) {
         if (event.getEntity().getKiller() == null) return;
-        if (!(event.getEntity().getKiller() instanceof Player)) return;
 
-        Player player = (Player) event.getEntity().getKiller();
+        Player player = event.getEntity().getKiller();
         QuestProgress progress = plugin.getActiveQuests().get(player.getUniqueId());
         if (progress == null) return;
 
@@ -60,5 +60,24 @@ public class QuestListener implements Listener {
             plugin.updateActionBar(player, progress);
             plugin.checkCompletion(player, progress);
         }
+    }
+
+    // Смерть игрока = провал квеста
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        Player player = event.getEntity();
+
+        QuestProgress progress = plugin.getActiveQuests().get(player.getUniqueId());
+        if (progress == null) return;
+
+        try {
+            plugin.getQuestService().failQuest(progress.getQuestId());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        plugin.getActiveQuests().remove(player.getUniqueId());
+
+        player.sendMessage("§cQuest failed! You died.");
     }
 }
