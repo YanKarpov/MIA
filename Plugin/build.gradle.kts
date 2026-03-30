@@ -24,6 +24,10 @@ tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }
 
+tasks.jar {
+    enabled = false
+}
+
 tasks.register<Jar>("fatJar") {
     archiveBaseName.set("QuestAIPlugin")
     archiveVersion.set(version.toString())
@@ -31,7 +35,9 @@ tasks.register<Jar>("fatJar") {
     from(sourceSets.main.get().output)
 
     from({
-        configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }
+        configurations.runtimeClasspath.get().map {
+            if (it.isDirectory) it else zipTree(it)
+        }
     })
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -41,10 +47,15 @@ tasks.register<Jar>("fatJar") {
     }
 }
 
+tasks.register<Delete>("cleanPlugins") {
+    delete(fileTree("../minecraft/plugins") {
+        include("*.jar")
+    })
+}
+
 tasks.register<Copy>("copyToServer") {
     dependsOn("fatJar")
-    from(layout.buildDirectory.dir("libs"))
-    include("*.jar")
+    from(layout.buildDirectory.file("libs/QuestAIPlugin-${version}.jar"))
     into("../minecraft/plugins")
 }
 
@@ -53,6 +64,11 @@ tasks.register<Exec>("restartServer") {
 }
 
 tasks.register("deploy") {
+    dependsOn("cleanPlugins")
     dependsOn("copyToServer")
     finalizedBy("restartServer")
+}
+
+tasks.build {
+    dependsOn("fatJar")
 }
