@@ -40,6 +40,21 @@ services:
     networks:
       - net
 
+  ml-service:
+    build: ./ml-service
+    container_name: ml-service
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./ml-service:/app   
+    networks:
+      - net
+
 networks:
   net:
     driver: bridge

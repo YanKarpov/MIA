@@ -14,6 +14,7 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.20.2-R0.1-SNAPSHOT")
     implementation("net.kyori:adventure-api:4.14.0")
     implementation("org.postgresql:postgresql:42.7.10")
+    implementation("com.google.code.gson:gson:2.10.1")
 }
 
 java {

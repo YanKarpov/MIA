@@ -17,6 +17,7 @@ public class DBConnector {
 
     private void connectWithRetry() throws SQLException {
         int attempts = 15;
+
         while (attempts > 0) {
             try {
                 System.out.println("[DBConnector] Attempting connection to: " + URL);
@@ -62,6 +63,11 @@ public class DBConnector {
                 amount INT,
                 reward INT,
                 status VARCHAR(20),
+
+                deaths INT,
+                kills INT,
+                success BOOLEAN,
+
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
             """;
@@ -71,7 +77,6 @@ public class DBConnector {
             stmt.execute(createQuests);
         }
     }
-
 
     public void savePlayer(String uuid, String name) throws SQLException {
         String sql = "INSERT INTO players (uuid, name) VALUES (?, ?) ON CONFLICT (uuid) DO NOTHING";
@@ -97,7 +102,6 @@ public class DBConnector {
 
         return -1;
     }
-
 
     public int saveQuest(int playerId, String type, String target, int amount, int reward) throws SQLException {
 
@@ -128,26 +132,43 @@ public class DBConnector {
         return -1;
     }
 
-    public void updateQuestStatus(int questId, String status) throws SQLException {
+    public void completeQuest(int questId, int deaths, int kills) throws SQLException {
 
-        String sql = "UPDATE quests SET status = ? WHERE id = ?";
+        String sql = """
+            UPDATE quests
+            SET status = 'COMPLETED',
+                deaths = ?,
+                kills = ?,
+                success = true
+            WHERE id = ?
+        """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, status);
-            stmt.setInt(2, questId);
+            stmt.setInt(1, deaths);
+            stmt.setInt(2, kills);
+            stmt.setInt(3, questId);
             stmt.executeUpdate();
         }
     }
 
+    public void failQuest(int questId, int deaths, int kills) throws SQLException {
 
-    public void completeQuest(int questId) throws SQLException {
-        updateQuestStatus(questId, "COMPLETED");
+        String sql = """
+            UPDATE quests
+            SET status = 'FAILED',
+                deaths = ?,
+                kills = ?,
+                success = false
+            WHERE id = ?
+        """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, deaths);
+            stmt.setInt(2, kills);
+            stmt.setInt(3, questId);
+            stmt.executeUpdate();
+        }
     }
-
-    public void failQuest(int questId) throws SQLException {
-        updateQuestStatus(questId, "FAILED");
-    }
-
 
     public void close() {
         try {
@@ -158,5 +179,37 @@ public class DBConnector {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public double getSuccessRate(int playerId) throws SQLException {
+
+        String sql = """
+            SELECT 
+                COUNT(*) FILTER (WHERE success = true) AS wins,
+                COUNT(*) AS total
+            FROM quests
+            WHERE player_id = ?
+        """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, playerId);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+
+                int wins = rs.getInt("wins");
+                int total = rs.getInt("total");
+
+                if (total == 0) {
+                    return 0.0; 
+                }
+
+                return (double) wins / total;
+            }
+        }
+
+        return 0.0;
     }
 }

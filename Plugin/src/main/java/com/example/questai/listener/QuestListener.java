@@ -71,7 +71,7 @@ public class QuestListener implements Listener {
         if (progress == null) return;
 
         try {
-            plugin.getQuestService().failQuest(progress.getQuestId());
+            plugin.getQuestService().failQuest(player, progress.getQuestId());
         } catch (Exception e) {
             e.printStackTrace();
         }
