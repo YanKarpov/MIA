@@ -133,7 +133,7 @@ public class QuestPlugin extends JavaPlugin {
             activeQuests.remove(player.getUniqueId());
 
             try {
-                questService.completeQuest(progress.getQuestId());
+                questService.completeQuest(player, progress.getQuestId());
             } catch (SQLException e) {
                 e.printStackTrace();
             }
