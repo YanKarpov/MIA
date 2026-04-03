@@ -32,3 +32,5 @@ gradle deploy
 - QuestListener про обработка игровых событий (блоки, мобы, предметы, смерть игрока)
 - QuestGenerator про генерация квестов
 - QuestPlugin основной класс плагина (логично, да?)
+
+![Kinger](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNGgxZGV2eHUwaWJsYXlodmhvYzNuMDZoaWVxOGp0MnM4eXpreXNjeCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/TXXjtuMCUihRQj9Z15/giphy.gif)
