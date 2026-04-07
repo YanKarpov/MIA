@@ -10,6 +10,14 @@ ml-service/.venv/
 ml-service/*.egg-info/
 ml-service/logs/
 
+Plugin/.gradle/
+Plugin/build/
+Plugin/bin/
+Plugin/*.jar
+!Plugin/libs/*.jar
+Plugin/.gradletasknamecache
+Plugin/gradle-app.setting
+
 .vscode/
 .idea/
 *.iml
