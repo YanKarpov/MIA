@@ -1,6 +1,17 @@
-**Тема дипломной работы:**  
+<div align="right">
+
+[![Build Status](https://github.com/YanKarpov/MIA/actions/workflows/build.yml/badge.svg)](https://github.com/YanKarpov/MIA/actions/workflows/build.yml)
+
+</div>
+
+<div align="center">
+
+# Project MIA
+
+## **Тема дипломной работы** 
 Проектирование, разработка и тестирование информационной системы генерации динамических квестов и игровых событий в среде Minecraft с применением машинного обучения.
 
+</div>
 
 # Сборка и развертывание проекта
 
