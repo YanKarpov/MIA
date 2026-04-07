@@ -33,31 +33,56 @@ public class QuestService {
             playerId = db.getPlayerId(player.getUniqueId().toString());
         }
 
+        // Получаем успешность из БД (теперь из таблицы players)
         double successRate = db.getSuccessRate(playerId);
+        
+        // Получаем kills и deaths из статистики Bukkit
+        int kills = player.getStatistic(org.bukkit.Statistic.MOB_KILLS);
+        int deaths = player.getStatistic(org.bukkit.Statistic.DEATHS);
+
+        // ===== СОЗДАЁМ ОБЪЕКТ PLAYER ДЛЯ ГЕНЕРАТОРА =====
+        com.example.questai.model.Player gamePlayer = new com.example.questai.model.Player();
+        gamePlayer.setId(playerId);
+        gamePlayer.setUuid(player.getUniqueId().toString());
+        gamePlayer.setName(player.getName());
+        gamePlayer.setKills(kills);
+        gamePlayer.setDeaths(deaths);
+        gamePlayer.setSuccessRate(successRate);
+        // =============================================
 
         List<QuestCandidate> candidates = new ArrayList<>();
+        List<Quest> candidateQuests = new ArrayList<>();
 
+        // Генерация 5 кандидатов с передачей Player
         for (int i = 0; i < 5; i++) {
-            Quest q = QuestGenerator.generateQuest();
+            Quest q = QuestGenerator.generateQuest(gamePlayer);
             QuestDTO dto = new QuestDTO(q.getAmount());
             candidates.add(new QuestCandidate(q, dto));
+            candidateQuests.add(q);
         }
+
+        // ===== ЛОГИРОВАНИЕ КАНДИДАТОВ =====
+        System.out.println("--- CANDIDATES ---");
+        for (int i = 0; i < candidates.size(); i++) {
+            Quest q = candidates.get(i).getQuest();
+            System.out.println("Candidate " + i + ": " + 
+                               "type=" + q.getType() + 
+                               ", amount=" + q.getAmount() + 
+                               ", reward=" + q.getReward());
+        }
+        // =================================
 
         List<QuestDTO> dtoList = candidates.stream()
                 .map(QuestCandidate::getDto)
                 .toList();
 
-        PlayerDTO playerDTO = new PlayerDTO(
-                player.getStatistic(org.bukkit.Statistic.DEATHS),
-                player.getStatistic(org.bukkit.Statistic.MOB_KILLS),
-                successRate
-        );
+        PlayerDTO playerDTO = new PlayerDTO(deaths, kills, successRate);
 
         RankRequest request = new RankRequest(playerDTO, dtoList);
 
         System.out.println("--- ML REQUEST ---");
-        System.out.println("Player: deaths=" + playerDTO.getDeaths() +
-                ", kills=" + playerDTO.getKills() +
+        System.out.println("Player: deaths=" + deaths +
+                ", kills=" + kills +
                 ", successRate=" + successRate);
 
         List<RankResponse> results = mlClient.rank(request);
@@ -83,14 +108,27 @@ public class QuestService {
         }
 
         Quest bestQuest = candidates.get(bestIndex).getQuest();
+        double bestScore = results != null && bestIndex < results.size() 
+            ? results.get(bestIndex).getScore() 
+            : 0.5;
+        
+        System.out.println("Selected: type=" + bestQuest.getType() + 
+                           ", amount=" + bestQuest.getAmount() + 
+                           ", reward=" + bestQuest.getReward());
+        System.out.println("ML Score: " + bestScore);
 
-        return db.saveQuest(
-                playerId,
-                bestQuest.getType(),
-                bestQuest.getTarget(),
-                bestQuest.getAmount(),
-                bestQuest.getReward()
-        );
+        // ===== СОХРАНЕНИЕ С НОВОЙ СТРУКТУРОЙ =====
+        int questId = db.saveQuest(playerId, bestQuest, gamePlayer, bestScore, true);
+        
+        // Сохраняем ML предсказания для всех кандидатов
+        if (results != null && !results.isEmpty()) {
+            for (RankResponse r : results) {
+                db.saveMlPrediction(questId, r.getQuestIndex(), r.getScore(), r.getQuestIndex() == bestIndex);
+            }
+        }
+        // =======================================
+
+        return questId;
     }
 
     private int chooseBestQuest(List<RankResponse> responses) {
@@ -112,19 +150,23 @@ public class QuestService {
 
     public void completeQuest(Player player, int questId) throws SQLException {
 
-        db.completeQuest(
-                questId,
-                player.getStatistic(org.bukkit.Statistic.DEATHS),
-                player.getStatistic(org.bukkit.Statistic.MOB_KILLS)
-        );
+        int deathsAfter = player.getStatistic(org.bukkit.Statistic.DEATHS);
+        int killsAfter = player.getStatistic(org.bukkit.Statistic.MOB_KILLS);
+        
+        db.completeQuest(questId, deathsAfter, killsAfter);
+        
+        System.out.println("[QuestService] Quest " + questId + " completed! " +
+                           "Deaths: " + deathsAfter + ", Kills: " + killsAfter);
     }
 
     public void failQuest(Player player, int questId) throws SQLException {
 
-        db.failQuest(
-                questId,
-                player.getStatistic(org.bukkit.Statistic.DEATHS),
-                player.getStatistic(org.bukkit.Statistic.MOB_KILLS)
-        );
+        int deathsAfter = player.getStatistic(org.bukkit.Statistic.DEATHS);
+        int killsAfter = player.getStatistic(org.bukkit.Statistic.MOB_KILLS);
+        
+        db.failQuest(questId, deathsAfter, killsAfter);
+        
+        System.out.println("[QuestService] Quest " + questId + " failed! " +
+                           "Deaths: " + deathsAfter + ", Kills: " + killsAfter);
     }
 }
