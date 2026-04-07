@@ -5,6 +5,7 @@ import com.example.questai.generator.QuestGenerator;
 import com.example.questai.ml.*;
 import com.example.questai.model.Quest;
 import org.bukkit.entity.Player;
+import org.bukkit.Location;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -33,12 +34,15 @@ public class QuestService {
             playerId = db.getPlayerId(player.getUniqueId().toString());
         }
 
-        // Получаем успешность из БД (теперь из таблицы players)
+        // Получаем успешность из БД
         double successRate = db.getSuccessRate(playerId);
         
         // Получаем kills и deaths из статистики Bukkit
         int kills = player.getStatistic(org.bukkit.Statistic.MOB_KILLS);
         int deaths = player.getStatistic(org.bukkit.Statistic.DEATHS);
+        
+        // Получаем текущую позицию и биом игрока
+        Location location = player.getLocation();
 
         // ===== СОЗДАЁМ ОБЪЕКТ PLAYER ДЛЯ ГЕНЕРАТОРА =====
         com.example.questai.model.Player gamePlayer = new com.example.questai.model.Player();
@@ -48,17 +52,22 @@ public class QuestService {
         gamePlayer.setKills(kills);
         gamePlayer.setDeaths(deaths);
         gamePlayer.setSuccessRate(successRate);
+        
+        // Дополнительная статистика для ML
+        gamePlayer.setLastQuestType(getLastQuestType(playerId));
+        gamePlayer.setConsecutiveSuccesses(getConsecutiveSuccesses(playerId));
+        gamePlayer.setFavoriteType(getFavoriteQuestType(playerId));
+        gamePlayer.setLeastFavoriteType(getLeastFavoriteQuestType(playerId));
+        gamePlayer.setPreferredTarget(getPreferredTarget(playerId));
         // =============================================
 
         List<QuestCandidate> candidates = new ArrayList<>();
-        List<Quest> candidateQuests = new ArrayList<>();
 
-        // Генерация 5 кандидатов с передачей Player
+        // Генерация 5 кандидатов с передачей Player и локации (биома)
         for (int i = 0; i < 5; i++) {
-            Quest q = QuestGenerator.generateQuest(gamePlayer);
+            Quest q = QuestGenerator.generateQuest(gamePlayer, location);
             QuestDTO dto = new QuestDTO(q.getAmount());
             candidates.add(new QuestCandidate(q, dto));
-            candidateQuests.add(q);
         }
 
         // ===== ЛОГИРОВАНИЕ КАНДИДАТОВ =====
@@ -67,6 +76,7 @@ public class QuestService {
             Quest q = candidates.get(i).getQuest();
             System.out.println("Candidate " + i + ": " + 
                                "type=" + q.getType() + 
+                               ", target=" + q.getTarget() +
                                ", amount=" + q.getAmount() + 
                                ", reward=" + q.getReward());
         }
@@ -84,6 +94,7 @@ public class QuestService {
         System.out.println("Player: deaths=" + deaths +
                 ", kills=" + kills +
                 ", successRate=" + successRate);
+        System.out.println("Biome: " + location.getWorld().getBiome(location.getBlockX(), location.getBlockZ()));
 
         List<RankResponse> results = mlClient.rank(request);
 
@@ -98,7 +109,7 @@ public class QuestService {
             }
         }
 
-        int bestIndex = chooseBestQuest(results);
+        int bestIndex = chooseBestQuest(results, candidates);
 
         System.out.println("=== SELECTED QUEST ===");
         System.out.println("Best index: " + bestIndex);
@@ -113,11 +124,12 @@ public class QuestService {
             : 0.5;
         
         System.out.println("Selected: type=" + bestQuest.getType() + 
+                           ", target=" + bestQuest.getTarget() +
                            ", amount=" + bestQuest.getAmount() + 
                            ", reward=" + bestQuest.getReward());
         System.out.println("ML Score: " + bestScore);
 
-        // ===== СОХРАНЕНИЕ С НОВОЙ СТРУКТУРОЙ =====
+        // ===== СОХРАНЕНИЕ В БД =====
         int questId = db.saveQuest(playerId, bestQuest, gamePlayer, bestScore, true);
         
         // Сохраняем ML предсказания для всех кандидатов
@@ -126,47 +138,87 @@ public class QuestService {
                 db.saveMlPrediction(questId, r.getQuestIndex(), r.getScore(), r.getQuestIndex() == bestIndex);
             }
         }
-        // =======================================
+        
+        // Обновляем последний тип квеста для игрока
+        db.updateLastQuestType(playerId, bestQuest.getType());
 
         return questId;
     }
 
-    private int chooseBestQuest(List<RankResponse> responses) {
-
+    private int chooseBestQuest(List<RankResponse> responses, List<QuestCandidate> candidates) {
         if (responses == null || responses.isEmpty()) {
-            return -1;
+            // Fallback: выбираем самый лёгкий квест (минимальный amount)
+            int easiestIndex = 0;
+            for (int i = 1; i < candidates.size(); i++) {
+                if (candidates.get(i).getQuest().getAmount() < candidates.get(easiestIndex).getQuest().getAmount()) {
+                    easiestIndex = i;
+                }
+            }
+            System.out.println("Fallback: выбран лёгкий квест (amount=" + 
+                               candidates.get(easiestIndex).getQuest().getAmount() + ")");
+            return easiestIndex;
         }
 
         RankResponse best = null;
-
         for (RankResponse r : responses) {
             if (best == null || r.getScore() > best.getScore()) {
                 best = r;
             }
         }
-
         return best != null ? best.getQuestIndex() : -1;
     }
 
-    public void completeQuest(Player player, int questId) throws SQLException {
+    private String getLastQuestType(int playerId) throws SQLException {
+        return db.getLastQuestType(playerId);
+    }
+    
+    private int getConsecutiveSuccesses(int playerId) throws SQLException {
+        return db.getConsecutiveSuccesses(playerId);
+    }
+    
+    private String getFavoriteQuestType(int playerId) throws SQLException {
+        return db.getFavoriteQuestType(playerId);
+    }
+    
+    private String getLeastFavoriteQuestType(int playerId) throws SQLException {
+        return db.getLeastFavoriteQuestType(playerId);
+    }
+    
+    private String getPreferredTarget(int playerId) throws SQLException {
+        return db.getPreferredTarget(playerId);
+    }
 
+    public void completeQuest(Player player, int questId) throws SQLException {
         int deathsAfter = player.getStatistic(org.bukkit.Statistic.DEATHS);
         int killsAfter = player.getStatistic(org.bukkit.Statistic.MOB_KILLS);
+        
+        // Получаем тип квеста перед завершением
+        String questType = db.getQuestType(questId);
         
         db.completeQuest(questId, deathsAfter, killsAfter);
         
+        // Обновляем историю для анализа предпочтений
+        db.updatePlayerQuestHistory(questId, true);
+        
         System.out.println("[QuestService] Quest " + questId + " completed! " +
-                           "Deaths: " + deathsAfter + ", Kills: " + killsAfter);
+                           "Type: " + questType +
+                           ", Deaths: " + deathsAfter + ", Kills: " + killsAfter);
     }
 
     public void failQuest(Player player, int questId) throws SQLException {
-
         int deathsAfter = player.getStatistic(org.bukkit.Statistic.DEATHS);
         int killsAfter = player.getStatistic(org.bukkit.Statistic.MOB_KILLS);
         
+        // Получаем тип квеста перед завершением
+        String questType = db.getQuestType(questId);
+        
         db.failQuest(questId, deathsAfter, killsAfter);
         
+        // Обновляем историю для анализа предпочтений
+        db.updatePlayerQuestHistory(questId, false);
+        
         System.out.println("[QuestService] Quest " + questId + " failed! " +
-                           "Deaths: " + deathsAfter + ", Kills: " + killsAfter);
+                           "Type: " + questType +
+                           ", Deaths: " + deathsAfter + ", Kills: " + killsAfter);
     }
 }

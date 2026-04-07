@@ -18,21 +18,25 @@ public class QuestListener implements Listener {
         this.plugin = plugin;
     }
 
-    // Ломание блоков
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         QuestProgress progress = plugin.getActiveQuests().get(player.getUniqueId());
         if (progress == null) return;
 
-        if ("Break".equals(progress.getQuest().getType())) {
-            progress.increment();
-            plugin.updateActionBar(player, progress);
-            plugin.checkCompletion(player, progress);
+        String questType = progress.getQuest().getType();
+        String questTarget = progress.getQuest().getTarget();
+        String blockType = event.getBlock().getType().toString();
+        
+        if ("Break".equals(questType)) {
+            if (questTarget == null || questTarget.equals("ANY") || blockType.equals(questTarget)) {
+                progress.increment();
+                plugin.updateActionBar(player, progress);
+                plugin.checkCompletion(player, progress);
+            }
         }
     }
 
-    // Убийство мобов
     @EventHandler
     public void onEntityKill(EntityDeathEvent event) {
         if (event.getEntity().getKiller() == null) return;
@@ -41,28 +45,38 @@ public class QuestListener implements Listener {
         QuestProgress progress = plugin.getActiveQuests().get(player.getUniqueId());
         if (progress == null) return;
 
-        if ("Kill".equals(progress.getQuest().getType())) {
-            progress.increment();
-            plugin.updateActionBar(player, progress);
-            plugin.checkCompletion(player, progress);
+        String questType = progress.getQuest().getType();
+        String questTarget = progress.getQuest().getTarget();
+        String entityType = event.getEntity().getType().toString();
+        
+        if ("Kill".equals(questType)) {
+            if (questTarget == null || questTarget.equals("ANY") || entityType.equals(questTarget)) {
+                progress.increment();
+                plugin.updateActionBar(player, progress);
+                plugin.checkCompletion(player, progress);
+            }
         }
     }
 
-    // Сбор предметов
     @EventHandler
     public void onItemPickup(PlayerPickupItemEvent event) {
         Player player = event.getPlayer();
         QuestProgress progress = plugin.getActiveQuests().get(player.getUniqueId());
         if (progress == null) return;
 
-        if ("Collect".equals(progress.getQuest().getType())) {
-            progress.increment();
-            plugin.updateActionBar(player, progress);
-            plugin.checkCompletion(player, progress);
+        String questType = progress.getQuest().getType();
+        String questTarget = progress.getQuest().getTarget();
+        String itemType = event.getItem().getItemStack().getType().toString();
+        
+        if ("Collect".equals(questType)) {
+            if (questTarget == null || questTarget.equals("ANY") || itemType.equals(questTarget)) {
+                progress.increment();
+                plugin.updateActionBar(player, progress);
+                plugin.checkCompletion(player, progress);
+            }
         }
     }
 
-    // Смерть игрока = провал квеста
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
@@ -78,6 +92,6 @@ public class QuestListener implements Listener {
 
         plugin.getActiveQuests().remove(player.getUniqueId());
 
-        player.sendMessage("§cQuest failed! You died.");
+        player.sendMessage("§c❌ Quest failed! You died.");
     }
 }

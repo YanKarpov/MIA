@@ -11,6 +11,14 @@ public class Player {
     private double successRate;
     private int totalQuests;
     private int completedQuests;
+    
+    // ===== НОВЫЕ ПОЛЯ ДЛЯ АНАЛИЗА ПРЕДПОЧТЕНИЙ =====
+    private String lastQuestType;
+    private int consecutiveSuccesses;
+    private String favoriteType;
+    private String leastFavoriteType;
+    private String preferredTarget;
+    // =============================================
 
     // Пустой конструктор
     public Player() {}
@@ -24,6 +32,11 @@ public class Player {
         this.successRate = 0.5;
         this.totalQuests = 0;
         this.completedQuests = 0;
+        this.lastQuestType = null;
+        this.consecutiveSuccesses = 0;
+        this.favoriteType = null;
+        this.leastFavoriteType = null;
+        this.preferredTarget = null;
     }
 
     // Конструктор с полными данными
@@ -37,6 +50,11 @@ public class Player {
         this.totalQuests = totalQuests;
         this.completedQuests = completedQuests;
         this.successRate = successRate;
+        this.lastQuestType = null;
+        this.consecutiveSuccesses = 0;
+        this.favoriteType = null;
+        this.leastFavoriteType = null;
+        this.preferredTarget = null;
     }
 
     // Преобразование в PlayerDTO для отправки в ML сервис
@@ -66,7 +84,8 @@ public class Player {
         updateSuccessRate();
     }
 
-    // Геттеры и сеттеры
+    // ===== ГЕТТЕРЫ И СЕТТЕРЫ =====
+    
     public int getId() {
         return id;
     }
@@ -132,6 +151,49 @@ public class Player {
         this.completedQuests = completedQuests;
         updateSuccessRate();
     }
+    
+    // ===== НОВЫЕ ГЕТТЕРЫ И СЕТТЕРЫ =====
+    
+    public String getLastQuestType() {
+        return lastQuestType;
+    }
+    
+    public void setLastQuestType(String lastQuestType) {
+        this.lastQuestType = lastQuestType;
+    }
+    
+    public int getConsecutiveSuccesses() {
+        return consecutiveSuccesses;
+    }
+    
+    public void setConsecutiveSuccesses(int consecutiveSuccesses) {
+        this.consecutiveSuccesses = consecutiveSuccesses;
+    }
+    
+    public String getFavoriteType() {
+        return favoriteType;
+    }
+    
+    public void setFavoriteType(String favoriteType) {
+        this.favoriteType = favoriteType;
+    }
+    
+    public String getLeastFavoriteType() {
+        return leastFavoriteType;
+    }
+    
+    public void setLeastFavoriteType(String leastFavoriteType) {
+        this.leastFavoriteType = leastFavoriteType;
+    }
+    
+    public String getPreferredTarget() {
+        return preferredTarget;
+    }
+    
+    public void setPreferredTarget(String preferredTarget) {
+        this.preferredTarget = preferredTarget;
+    }
+    // =================================
 
     @Override
     public String toString() {
@@ -144,6 +206,11 @@ public class Player {
                 ", successRate=" + successRate +
                 ", totalQuests=" + totalQuests +
                 ", completedQuests=" + completedQuests +
+                ", lastQuestType='" + lastQuestType + '\'' +
+                ", consecutiveSuccesses=" + consecutiveSuccesses +
+                ", favoriteType='" + favoriteType + '\'' +
+                ", leastFavoriteType='" + leastFavoriteType + '\'' +
+                ", preferredTarget='" + preferredTarget + '\'' +
                 '}';
     }
 }

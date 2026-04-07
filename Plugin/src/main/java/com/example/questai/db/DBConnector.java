@@ -101,7 +101,6 @@ public class DBConnector {
     }
 
     private void upgradeTablesIfNeeded() throws SQLException {
-        // Добавляем новые колонки, если их нет (для существующей БД)
         String[] alterStatements = {
             "ALTER TABLE players ADD COLUMN IF NOT EXISTS total_deaths INT DEFAULT 0",
             "ALTER TABLE players ADD COLUMN IF NOT EXISTS total_kills INT DEFAULT 0",
@@ -126,7 +125,6 @@ public class DBConnector {
             try (Statement stmt = conn.createStatement()) {
                 stmt.executeUpdate(sql);
             } catch (SQLException e) {
-                // Колонка возможно уже существует
                 if (!e.getMessage().contains("already exists")) {
                     System.err.println("Warning: " + e.getMessage());
                 }
@@ -185,7 +183,6 @@ public class DBConnector {
                 return player;
             }
         }
-        
         return null;
     }
 
@@ -208,6 +205,19 @@ public class DBConnector {
             stmt.setInt(4, playerId);
             stmt.executeUpdate();
         }
+    }
+
+    public double getSuccessRate(int playerId) throws SQLException {
+        String sql = "SELECT success_rate FROM players WHERE id = ?";
+        
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, playerId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble("success_rate");
+            }
+        }
+        return 0.0;
     }
 
     // ==================== QUESTS ====================
@@ -261,7 +271,6 @@ public class DBConnector {
             stmt.executeUpdate();
         }
         
-        // Получаем player_id и обновляем статистику игрока
         int playerId = getPlayerIdByQuestId(questId);
         if (playerId != -1) {
             updatePlayerStats(playerId);
@@ -285,7 +294,6 @@ public class DBConnector {
             stmt.executeUpdate();
         }
         
-        // Обновляем статистику игрока
         int playerId = getPlayerIdByQuestId(questId);
         if (playerId != -1) {
             updatePlayerStats(playerId);
@@ -304,17 +312,132 @@ public class DBConnector {
         return -1;
     }
 
-    public double getSuccessRate(int playerId) throws SQLException {
-        String sql = "SELECT success_rate FROM players WHERE id = ?";
+    public String getQuestType(int questId) throws SQLException {
+        String sql = "SELECT type FROM quests WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, questId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("type");
+            }
+        }
+        return null;
+    }
+
+    // ==================== PLAYER PREFERENCES ====================
+
+    public String getLastQuestType(int playerId) throws SQLException {
+        String sql = """
+            SELECT type FROM quests 
+            WHERE player_id = ? 
+            ORDER BY issued_at DESC 
+            LIMIT 1
+            """;
         
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, playerId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return rs.getDouble("success_rate");
+                return rs.getString("type");
             }
         }
-        return 0.0;
+        return null;
+    }
+
+    public int getConsecutiveSuccesses(int playerId) throws SQLException {
+        String sql = """
+            WITH ordered_quests AS (
+                SELECT status, 
+                       ROW_NUMBER() OVER (ORDER BY issued_at DESC) as rn
+                FROM quests 
+                WHERE player_id = ? AND status != 'IN_PROGRESS'
+                ORDER BY issued_at DESC
+            )
+            SELECT COUNT(*) FROM ordered_quests 
+            WHERE rn < (
+                SELECT COALESCE(MIN(rn), 1)
+                FROM ordered_quests 
+                WHERE status = 'FAILED'
+            ) AND status = 'COMPLETED'
+            """;
+        
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, playerId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    public String getFavoriteQuestType(int playerId) throws SQLException {
+        String sql = """
+            SELECT type, 
+                   COUNT(*) FILTER (WHERE status = 'COMPLETED')::FLOAT / NULLIF(COUNT(*), 0) as success_rate
+            FROM quests 
+            WHERE player_id = ? AND status != 'IN_PROGRESS'
+            GROUP BY type
+            ORDER BY success_rate DESC, COUNT(*) DESC
+            LIMIT 1
+            """;
+        
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, playerId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("type");
+            }
+        }
+        return null;
+    }
+
+    public String getLeastFavoriteQuestType(int playerId) throws SQLException {
+        String sql = """
+            SELECT type, 
+                   COUNT(*) FILTER (WHERE status = 'COMPLETED')::FLOAT / NULLIF(COUNT(*), 0) as success_rate
+            FROM quests 
+            WHERE player_id = ? AND status != 'IN_PROGRESS'
+            GROUP BY type
+            ORDER BY success_rate ASC, COUNT(*) DESC
+            LIMIT 1
+            """;
+        
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, playerId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("type");
+            }
+        }
+        return null;
+    }
+
+    public String getPreferredTarget(int playerId) throws SQLException {
+        String sql = """
+            SELECT target, COUNT(*) as cnt
+            FROM quests 
+            WHERE player_id = ? AND status = 'COMPLETED'
+            GROUP BY target
+            ORDER BY cnt DESC
+            LIMIT 1
+            """;
+        
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, playerId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("target");
+            }
+        }
+        return null;
+    }
+
+    public void updatePlayerQuestHistory(int questId, boolean completed) throws SQLException {
+        // Этот метод вызывается при завершении квеста
+        // Основное обновление уже происходит в completeQuest/failQuest
+        // Здесь можно добавить дополнительную логику при необходимости
+        System.out.println("[DBConnector] Quest history updated: questId=" + questId + ", completed=" + completed);
     }
 
     // ==================== ML PREDICTIONS ====================
@@ -369,4 +492,57 @@ public class DBConnector {
             e.printStackTrace();
         }
     }
+
+    public void updateLastQuestType(int playerId, String questType) throws SQLException {
+        // Опционально: создать таблицу player_preferences если её нет
+        String createTable = """
+            CREATE TABLE IF NOT EXISTS player_preferences (
+                player_id INT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+                last_quest_type VARCHAR(20),
+                updated_at TIMESTAMP DEFAULT NOW()
+            )
+            """;
+        
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute(createTable);
+        } catch (SQLException e) {
+            // Таблица возможно уже существует
+        }
+        
+        // Обновляем последний тип квеста
+        String sql = """
+            INSERT INTO player_preferences (player_id, last_quest_type, updated_at)
+            VALUES (?, ?, NOW())
+            ON CONFLICT (player_id) DO UPDATE SET
+                last_quest_type = EXCLUDED.last_quest_type,
+                updated_at = NOW()
+            """;
+        
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, playerId);
+            stmt.setString(2, questType);
+            stmt.executeUpdate();
+            System.out.println("[DBConnector] Updated last quest type for player " + playerId + ": " + questType);
+        }
+    }
+
+    public Quest getQuestById(int questId) throws SQLException {
+    String sql = "SELECT type, target, amount, reward FROM quests WHERE id = ?";
+    
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setInt(1, questId);
+        ResultSet rs = stmt.executeQuery();
+        
+        if (rs.next()) {
+            Quest quest = new Quest();
+            quest.setId(questId);
+            quest.setType(rs.getString("type"));
+            quest.setTarget(rs.getString("target"));
+            quest.setAmount(rs.getInt("amount"));
+            quest.setReward(rs.getInt("reward"));
+            return quest;
+        }
+    }
+    return null;
+}
 }
