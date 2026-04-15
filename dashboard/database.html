@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIA Dashboard — Database</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <span class="neon-glow">🗄️</span>
+                </div>
+                <div>
+                    <h1>Minecraft <span class="gradient-text">Quest ML</span></h1>
+                    <p class="subtitle">База данных и логи</p>
+                </div>
+            </div>
+            <div id="status-container"></div>
+        </header>
+
+        <!--#include virtual="/components/navbar.html" -->
+
+
+        <!-- Database Content -->
+        <div class="card">
+            <div class="card-header">
+                <h2>📋 Просмотр таблиц</h2>
+                <button class="refresh-btn" id="refreshDbBtn">🔄 Обновить</button>
+            </div>
+            <div class="card-body">
+                <div class="table-tabs">
+                    <button class="table-tab active" data-table="quests">📜 Квесты</button>
+                    <button class="table-tab" data-table="players">👥 Игроки</button>
+                    <button class="table-tab" data-table="ml_logs">🤖 ML Логи</button>
+                </div>
+                <div class="db-table-wrapper" id="dbTableContainer">
+                    <div style="padding: 40px; text-align: center;">Загрузка...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid" style="margin-top: 20px;">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <span class="stat-label">Всего квестов</span>
+                    <span class="stat-value" id="totalQuestsDb">—</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <span class="stat-label">Успешно</span>
+                    <span class="stat-value" id="completedQuests">—</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">❌</div>
+                <div class="stat-info">
+                    <span class="stat-label">Провалено</span>
+                    <span class="stat-value" id="failedQuests">—</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-info">
+                    <span class="stat-label">Ср. ML Score</span>
+                    <span class="stat-value" id="avgMlScore">—</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ОДИН JS ФАЙЛ -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
