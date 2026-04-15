@@ -34,17 +34,13 @@ public class QuestService {
             playerId = db.getPlayerId(player.getUniqueId().toString());
         }
 
-        // Получаем успешность из БД
         double successRate = db.getSuccessRate(playerId);
         
-        // Получаем kills и deaths из статистики Bukkit
         int kills = player.getStatistic(org.bukkit.Statistic.MOB_KILLS);
         int deaths = player.getStatistic(org.bukkit.Statistic.DEATHS);
         
-        // Получаем текущую позицию и биом игрока
         Location location = player.getLocation();
 
-        // ===== СОЗДАЁМ ОБЪЕКТ PLAYER ДЛЯ ГЕНЕРАТОРА =====
         com.example.questai.model.Player gamePlayer = new com.example.questai.model.Player();
         gamePlayer.setId(playerId);
         gamePlayer.setUuid(player.getUniqueId().toString());
@@ -53,24 +49,20 @@ public class QuestService {
         gamePlayer.setDeaths(deaths);
         gamePlayer.setSuccessRate(successRate);
         
-        // Дополнительная статистика для ML
         gamePlayer.setLastQuestType(getLastQuestType(playerId));
         gamePlayer.setConsecutiveSuccesses(getConsecutiveSuccesses(playerId));
         gamePlayer.setFavoriteType(getFavoriteQuestType(playerId));
         gamePlayer.setLeastFavoriteType(getLeastFavoriteQuestType(playerId));
         gamePlayer.setPreferredTarget(getPreferredTarget(playerId));
-        // =============================================
 
         List<QuestCandidate> candidates = new ArrayList<>();
 
-        // Генерация 5 кандидатов с передачей Player и локации (биома)
         for (int i = 0; i < 5; i++) {
             Quest q = QuestGenerator.generateQuest(gamePlayer, location);
             QuestDTO dto = new QuestDTO(q.getAmount());
             candidates.add(new QuestCandidate(q, dto));
         }
 
-        // ===== ЛОГИРОВАНИЕ КАНДИДАТОВ =====
         System.out.println("--- CANDIDATES ---");
         for (int i = 0; i < candidates.size(); i++) {
             Quest q = candidates.get(i).getQuest();
@@ -80,7 +72,6 @@ public class QuestService {
                                ", amount=" + q.getAmount() + 
                                ", reward=" + q.getReward());
         }
-        // =================================
 
         List<QuestDTO> dtoList = candidates.stream()
                 .map(QuestCandidate::getDto)
@@ -129,17 +120,14 @@ public class QuestService {
                            ", reward=" + bestQuest.getReward());
         System.out.println("ML Score: " + bestScore);
 
-        // ===== СОХРАНЕНИЕ В БД =====
         int questId = db.saveQuest(playerId, bestQuest, gamePlayer, bestScore, true);
         
-        // Сохраняем ML предсказания для всех кандидатов
         if (results != null && !results.isEmpty()) {
             for (RankResponse r : results) {
                 db.saveMlPrediction(questId, r.getQuestIndex(), r.getScore(), r.getQuestIndex() == bestIndex);
             }
         }
         
-        // Обновляем последний тип квеста для игрока
         db.updateLastQuestType(playerId, bestQuest.getType());
 
         return questId;
@@ -147,7 +135,6 @@ public class QuestService {
 
     private int chooseBestQuest(List<RankResponse> responses, List<QuestCandidate> candidates) {
         if (responses == null || responses.isEmpty()) {
-            // Fallback: выбираем самый лёгкий квест (минимальный amount)
             int easiestIndex = 0;
             for (int i = 1; i < candidates.size(); i++) {
                 if (candidates.get(i).getQuest().getAmount() < candidates.get(easiestIndex).getQuest().getAmount()) {
@@ -192,13 +179,13 @@ public class QuestService {
         int deathsAfter = player.getStatistic(org.bukkit.Statistic.DEATHS);
         int killsAfter = player.getStatistic(org.bukkit.Statistic.MOB_KILLS);
         
-        // Получаем тип квеста перед завершением
         String questType = db.getQuestType(questId);
         
         db.completeQuest(questId, deathsAfter, killsAfter);
         
-        // Обновляем историю для анализа предпочтений
         db.updatePlayerQuestHistory(questId, true);
+        
+        updatePlayerSuccessRate(questId);
         
         System.out.println("[QuestService] Quest " + questId + " completed! " +
                            "Type: " + questType +
@@ -209,16 +196,32 @@ public class QuestService {
         int deathsAfter = player.getStatistic(org.bukkit.Statistic.DEATHS);
         int killsAfter = player.getStatistic(org.bukkit.Statistic.MOB_KILLS);
         
-        // Получаем тип квеста перед завершением
         String questType = db.getQuestType(questId);
         
         db.failQuest(questId, deathsAfter, killsAfter);
         
-        // Обновляем историю для анализа предпочтений
         db.updatePlayerQuestHistory(questId, false);
+        
+        updatePlayerSuccessRate(questId);
         
         System.out.println("[QuestService] Quest " + questId + " failed! " +
                            "Type: " + questType +
                            ", Deaths: " + deathsAfter + ", Kills: " + killsAfter);
+    }
+    
+    /**
+     * Обновляет success rate игрока на основе истории квестов
+     * @param questId ID завершённого квеста
+     * @throws SQLException если ошибка БД
+     */
+    private void updatePlayerSuccessRate(int questId) throws SQLException {
+        int playerId = db.getPlayerIdByQuestId(questId);
+        
+        db.updatePlayerStats(playerId);
+        
+        double newSuccessRate = db.getSuccessRate(playerId);
+        
+        System.out.println("[QuestService] Updated success rate for player " + playerId + 
+                           ": " + String.format("%.2f", newSuccessRate));
     }
 }
