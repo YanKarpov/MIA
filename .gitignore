@@ -23,3 +23,5 @@ Plugin/gradle-app.setting
 *.iml
 
 .env
+.env.local
+.env.*.local
