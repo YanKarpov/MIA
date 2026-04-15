@@ -5,7 +5,7 @@ import com.example.questai.listener.QuestListener;
 import com.example.questai.model.Quest;
 import com.example.questai.model.QuestProgress;
 import com.example.questai.service.QuestService;
-import com.example.questai.ui.MessageFormat;
+import com.example.questai.service.CommandService;
 import com.example.questai.ui.ActionBarUpdater;
 import com.example.questai.ui.TitleSender;
 import org.bukkit.Bukkit;
@@ -23,6 +23,7 @@ public class QuestPlugin extends JavaPlugin {
     private final Map<UUID, QuestProgress> activeQuests = new HashMap<>();
     private DBConnector db;
     private QuestService questService;
+    private CommandService commandService;
 
     @Override
     public void onEnable() {
@@ -31,6 +32,7 @@ public class QuestPlugin extends JavaPlugin {
         try {
             db = new DBConnector();
             questService = new QuestService(db);
+            commandService = new CommandService(this, questService);
         } catch (SQLException e) {
             e.printStackTrace();
             getLogger().severe("Failed to connect to database!");
@@ -70,60 +72,16 @@ public class QuestPlugin extends JavaPlugin {
             
             // Отмена квеста
             if (args.length > 0 && args[0].equalsIgnoreCase("cancel")) {
-                cancelQuest(player);
+                commandService.cancelQuest(player);
                 return true;
             }
             
-            // Проверка активного квеста
-            QuestProgress existingProgress = activeQuests.get(player.getUniqueId());
-            if (existingProgress != null) {
-                player.sendMessage(MessageFormat.activeQuestMessage(existingProgress));
-                return true;
-            }
-
             // Создание нового квеста
-            try {
-                int questId = questService.createQuest(player);
-                Quest quest = getQuestFromDB(questId);
-                
-                if (quest == null) {
-                    player.sendMessage(MessageFormat.errorMessage("Ошибка загрузки квеста"));
-                    return true;
-                }
-
-                QuestProgress progress = new QuestProgress(questId, quest);
-                activeQuests.put(player.getUniqueId(), progress);
-
-                player.sendMessage(MessageFormat.newQuestMessage(quest));
-                ActionBarUpdater.update(player, progress);
-
-            } catch (SQLException e) {
-                e.printStackTrace();
-                player.sendMessage(MessageFormat.errorMessage("Ошибка создания квеста"));
-            }
-
+            commandService.createNewQuest(player);
             return true;
         }
 
         return false;
-    }
-    
-    private void cancelQuest(Player player) {
-        QuestProgress progress = activeQuests.get(player.getUniqueId());
-        
-        if (progress == null) {
-            player.sendMessage(MessageFormat.noActiveQuestMessage());
-            return;
-        }
-        
-        try {
-            questService.failQuest(player, progress.getQuestId());
-            activeQuests.remove(player.getUniqueId());
-            player.sendMessage(MessageFormat.cancelQuestMessage(progress.getQuest()));
-        } catch (SQLException e) {
-            e.printStackTrace();
-            player.sendMessage(MessageFormat.errorMessage("Ошибка отмены квеста"));
-        }
     }
     
     private Quest getQuestFromDB(int questId) throws SQLException {
@@ -152,5 +110,9 @@ public class QuestPlugin extends JavaPlugin {
 
     public QuestService getQuestService() {
         return questService;
+    }
+    
+    public Quest getQuestById(int questId) throws SQLException {
+        return db.getQuestById(questId);
     }
 }
