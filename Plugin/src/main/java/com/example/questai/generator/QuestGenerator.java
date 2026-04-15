@@ -16,7 +16,6 @@ public class QuestGenerator {
 
     private static final Random rand = new Random();
     
-    // Типы квестов
     private static final String[] TYPES = {"Break", "Kill", "Collect"};
     
     // Блоки для сломать (Break) по категориям сложности
@@ -116,14 +115,12 @@ public class QuestGenerator {
             return q;
         }
         
-        // Получаем биом игрока
         Biome biome = location.getWorld().getBiome(location.getBlockX(), location.getBlockZ());
         String biomeCategory = getBiomeCategory(biome);
         
         String type = selectTypeByBiome(player, biomeCategory);
         q.setType(type);
         
-        // Выбираем цель в зависимости от биома
         String target = selectTargetByBiome(type, biomeCategory, player);
         q.setTarget(target);
         
@@ -133,7 +130,6 @@ public class QuestGenerator {
         int reward = calculateReward(type, amount, target);
         q.setReward(reward);
         
-        // Добавляем информацию о биоме в квест
         q.setBiome(biomeCategory);
         
         System.out.println("[QuestGenerator] Квест в биоме " + biomeCategory + 
@@ -152,20 +148,15 @@ public class QuestGenerator {
         // Адаптация под биом
         switch (biomeCategory) {
             case "nether":
-                // В Незере чаще боевые квесты
                 return rand.nextDouble() < 0.7 ? "Kill" : "Break";
             case "end":
-                // В Энде тоже боевые
                 return rand.nextDouble() < 0.6 ? "Kill" : "Collect";
             case "ocean":
-                // В океане собирать сложно
                 return rand.nextDouble() < 0.5 ? "Kill" : "Break";
             case "desert":
             case "snowy":
-                // В экстремальных биомах проще ломать
                 return rand.nextDouble() < 0.5 ? "Break" : "Collect";
             default:
-                // Стандартное распределение
                 double r = rand.nextDouble();
                 if (r < 0.34) return "Kill";
                 if (r < 0.67) return "Collect";
@@ -208,10 +199,8 @@ public class QuestGenerator {
             default: baseAmount = 5;
         }
         
-        // Применяем множитель биома
         baseAmount = (int)(baseAmount * biomeMultiplier);
         
-        // Адаптация под уровень игрока
         if (successRate > 0.7) {
             return baseAmount + rand.nextInt(15) + 10;
         } else if (successRate < 0.4) {
@@ -223,17 +212,16 @@ public class QuestGenerator {
     
     private static double getBiomeDifficulty(String biomeCategory) {
         switch (biomeCategory) {
-            case "nether": return 2.0;   // Незер сложнее
-            case "end": return 2.5;      // Энд ещё сложнее
-            case "desert": return 1.2;   // Пустыня чуть сложнее
-            case "snowy": return 1.3;    // Снег сложнее
+            case "nether": return 2.0;   // Незер
+            case "end": return 2.5;      // Энд 
+            case "desert": return 1.2;   // Пустыня 
+            case "snowy": return 1.3;    // Зимние биомы
             case "ocean": return 1.5;    // Океан
             default: return 1.0;         // Обычные биомы
         }
     }
     
     private static int calculateReward(String type, int amount, String target) {
-        // Редкие цели дают больше награды
         int rarityBonus = getTargetRarity(target);
         
         switch (type) {
