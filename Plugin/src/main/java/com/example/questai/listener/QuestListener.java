@@ -2,6 +2,7 @@ package com.example.questai.listener;
 
 import com.example.questai.QuestPlugin;
 import com.example.questai.model.QuestProgress;
+import com.example.questai.ui.ActionBarUpdater;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
@@ -31,7 +32,7 @@ public class QuestListener implements Listener {
         if ("Break".equals(questType)) {
             if (questTarget == null || questTarget.equals("ANY") || blockType.equals(questTarget)) {
                 progress.increment();
-                plugin.updateActionBar(player, progress);
+                ActionBarUpdater.update(player, progress); 
                 plugin.checkCompletion(player, progress);
             }
         }
@@ -52,7 +53,7 @@ public class QuestListener implements Listener {
         if ("Kill".equals(questType)) {
             if (questTarget == null || questTarget.equals("ANY") || entityType.equals(questTarget)) {
                 progress.increment();
-                plugin.updateActionBar(player, progress);
+                ActionBarUpdater.update(player, progress); 
                 plugin.checkCompletion(player, progress);
             }
         }
@@ -71,7 +72,7 @@ public class QuestListener implements Listener {
         if ("Collect".equals(questType)) {
             if (questTarget == null || questTarget.equals("ANY") || itemType.equals(questTarget)) {
                 progress.increment();
-                plugin.updateActionBar(player, progress);
+                ActionBarUpdater.update(player, progress);  
                 plugin.checkCompletion(player, progress);
             }
         }

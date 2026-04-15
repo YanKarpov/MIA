@@ -1,13 +1,13 @@
 package com.example.questai;
 
-import com.example.questai.generator.QuestGenerator;
 import com.example.questai.db.DBConnector;
 import com.example.questai.listener.QuestListener;
 import com.example.questai.model.Quest;
 import com.example.questai.model.QuestProgress;
 import com.example.questai.service.QuestService;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
+import com.example.questai.ui.MessageFormat;
+import com.example.questai.ui.ActionBarUpdater;
+import com.example.questai.ui.TitleSender;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -44,7 +44,7 @@ public class QuestPlugin extends JavaPlugin {
                 for (var entry : activeQuests.entrySet()) {
                     Player player = Bukkit.getPlayer(entry.getKey());
                     if (player != null && player.isOnline()) {
-                        updateActionBar(player, entry.getValue());
+                        ActionBarUpdater.update(player, entry.getValue());
                         checkCompletion(player, entry.getValue());
                     }
                 }
@@ -68,59 +68,38 @@ public class QuestPlugin extends JavaPlugin {
 
         if (command.getName().equalsIgnoreCase("quest")) {
             
-            // Проверяем аргументы для отмены квеста
+            // Отмена квеста
             if (args.length > 0 && args[0].equalsIgnoreCase("cancel")) {
                 cancelQuest(player);
                 return true;
             }
             
-            // Если есть активный квест, предлагаем его отменить или заменяем
+            // Проверка активного квеста
             QuestProgress existingProgress = activeQuests.get(player.getUniqueId());
             if (existingProgress != null) {
-                player.sendMessage(Component.text("══════════════════════════════").color(NamedTextColor.GOLD));
-                player.sendMessage(Component.text("⚠ У вас уже есть активный квест!").color(NamedTextColor.YELLOW));
-                player.sendMessage(Component.text("").color(NamedTextColor.GRAY));
-                player.sendMessage(Component.text("Текущий квест: " + existingProgress.getQuest().getType() + 
-                                   " (" + existingProgress.getCurrent() + "/" + 
-                                   existingProgress.getQuest().getAmount() + ")").color(NamedTextColor.WHITE));
-                player.sendMessage(Component.text("").color(NamedTextColor.GRAY));
-                player.sendMessage(Component.text("Чтобы отменить и взять новый: §e/quest cancel").color(NamedTextColor.YELLOW));
-                player.sendMessage(Component.text("══════════════════════════════").color(NamedTextColor.GOLD));
+                player.sendMessage(MessageFormat.activeQuestMessage(existingProgress));
                 return true;
             }
 
+            // Создание нового квеста
             try {
                 int questId = questService.createQuest(player);
-                
                 Quest quest = getQuestFromDB(questId);
+                
                 if (quest == null) {
-                    player.sendMessage(Component.text("Error loading quest").color(NamedTextColor.RED));
+                    player.sendMessage(MessageFormat.errorMessage("Ошибка загрузки квеста"));
                     return true;
                 }
 
                 QuestProgress progress = new QuestProgress(questId, quest);
                 activeQuests.put(player.getUniqueId(), progress);
 
-                // Отображаем новый квест
-                player.sendMessage(Component.text("══════════════════════════════").color(NamedTextColor.GOLD));
-                player.sendMessage(Component.text("✦ НОВЫЙ КВЕСТ ✦").color(NamedTextColor.GOLD));
-                player.sendMessage(Component.text("").color(NamedTextColor.GRAY));
-                
-                String targetText = formatTarget(quest.getTarget(), quest.getType());
-                player.sendMessage(Component.text("Тип: " + quest.getType()).color(NamedTextColor.WHITE));
-                player.sendMessage(Component.text("Цель: " + targetText).color(NamedTextColor.WHITE));
-                player.sendMessage(Component.text("Количество: " + quest.getAmount()).color(NamedTextColor.WHITE));
-                player.sendMessage(Component.text("Награда: " + quest.getReward() + " XP").color(NamedTextColor.GREEN));
-                player.sendMessage(Component.text("").color(NamedTextColor.GRAY));
-                player.sendMessage(Component.text("Прогресс отображается над панелью инвентаря").color(NamedTextColor.YELLOW));
-                player.sendMessage(Component.text("Чтобы отменить квест: §e/quest cancel").color(NamedTextColor.YELLOW));
-                player.sendMessage(Component.text("══════════════════════════════").color(NamedTextColor.GOLD));
-
-                updateActionBar(player, progress);
+                player.sendMessage(MessageFormat.newQuestMessage(quest));
+                ActionBarUpdater.update(player, progress);
 
             } catch (SQLException e) {
                 e.printStackTrace();
-                player.sendMessage(Component.text("Error creating quest").color(NamedTextColor.RED));
+                player.sendMessage(MessageFormat.errorMessage("Ошибка создания квеста"));
             }
 
             return true;
@@ -131,85 +110,32 @@ public class QuestPlugin extends JavaPlugin {
     
     private void cancelQuest(Player player) {
         QuestProgress progress = activeQuests.get(player.getUniqueId());
+        
         if (progress == null) {
-            player.sendMessage(Component.text("У вас нет активного квеста для отмены!").color(NamedTextColor.RED));
+            player.sendMessage(MessageFormat.noActiveQuestMessage());
             return;
         }
         
         try {
-            // Отменяем квест в БД (помечаем как FAILED)
             questService.failQuest(player, progress.getQuestId());
-            
-            // Удаляем из активных квестов
             activeQuests.remove(player.getUniqueId());
-            
-            player.sendMessage(Component.text("══════════════════════════════").color(NamedTextColor.GOLD));
-            player.sendMessage(Component.text("✖ КВЕСТ ОТМЕНЁН ✖").color(NamedTextColor.RED));
-            player.sendMessage(Component.text("Вы отменили квест: " + progress.getQuest().getType()).color(NamedTextColor.WHITE));
-            player.sendMessage(Component.text("Используйте §e/quest §fдля получения нового").color(NamedTextColor.YELLOW));
-            player.sendMessage(Component.text("══════════════════════════════").color(NamedTextColor.GOLD));
-            
+            player.sendMessage(MessageFormat.cancelQuestMessage(progress.getQuest()));
         } catch (SQLException e) {
             e.printStackTrace();
-            player.sendMessage(Component.text("Error cancelling quest").color(NamedTextColor.RED));
+            player.sendMessage(MessageFormat.errorMessage("Ошибка отмены квеста"));
         }
     }
     
     private Quest getQuestFromDB(int questId) throws SQLException {
         return db.getQuestById(questId);
     }
-    
-    private String formatTarget(String target, String type) {
-        if (target == null || target.equals("ANY")) {
-            switch (type) {
-                case "Break": return "блоков";
-                case "Kill": return "мобов";
-                case "Collect": return "предметов";
-                default: return "цель";
-            }
-        }
-        
-        switch (type) {
-            case "Break": return "сломать " + target.toLowerCase();
-            case "Kill": return "убить " + target.toLowerCase();
-            case "Collect": return "собрать " + target.toLowerCase();
-            default: return target;
-        }
-    }
-
-    public void updateActionBar(Player player, QuestProgress progress) {
-        Quest quest = progress.getQuest();
-        String targetShort = getShortTarget(quest.getTarget(), quest.getType());
-        
-        String progressText = progress.getCurrent() + "/" + quest.getAmount() + " " + targetShort;
-        player.sendActionBar(Component.text(
-                "📋 " + quest.getType() + ": " + progressText
-        ).color(NamedTextColor.GREEN));
-    }
-    
-    private String getShortTarget(String target, String type) {
-        if (target == null || target.equals("ANY")) {
-            switch (type) {
-                case "Break": return "блоков";
-                case "Kill": return "мобов";
-                case "Collect": return "предметов";
-                default: return "целей";
-            }
-        }
-        return target.toLowerCase();
-    }
 
     public void checkCompletion(Player player, QuestProgress progress) {
         if (progress.getCurrent() >= progress.getQuest().getAmount()) {
             int xp = progress.getQuest().getReward();
             player.giveExp(xp);
-
-            player.sendTitle(
-                    "✅ Quest Completed!",
-                    "Reward: " + xp + " XP",
-                    10, 70, 20
-            );
-
+            
+            TitleSender.sendCompletionTitle(player, xp);
             activeQuests.remove(player.getUniqueId());
 
             try {
