@@ -57,7 +57,7 @@ def get_players_stats_from_db():
             total_deaths,
             completed_quests,
             total_quests - completed_quests as failed_quests,
-            ROUND(success_rate, 3) as success_rate
+            ROUND(CAST(success_rate AS numeric), 3) as success_rate
         FROM players 
         ORDER BY completed_quests DESC
     """)
@@ -87,7 +87,7 @@ def get_stats_summary_from_db():
     cur.execute("SELECT COUNT(*) FROM quests WHERE status = 'COMPLETED'")
     completed_quests = cur.fetchone()[0]
     
-    cur.execute("SELECT ROUND(AVG(ml_score), 3) FROM quests WHERE ml_score IS NOT NULL")
+    cur.execute("SELECT ROUND(CAST(AVG(ml_score) AS numeric), 3) FROM quests WHERE ml_score IS NOT NULL")
     avg_ml_score = cur.fetchone()[0]
     
     cur.execute("""

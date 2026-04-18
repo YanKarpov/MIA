@@ -68,6 +68,10 @@ public class DBConnector {
                 candidate_index INT,
                 predicted_score FLOAT,
                 was_selected BOOLEAN DEFAULT FALSE,
+                type VARCHAR(20),
+                target VARCHAR(50),
+                amount INT,
+                reward INT,
                 created_at TIMESTAMP DEFAULT NOW()
             );
             """;
@@ -97,7 +101,11 @@ public class DBConnector {
             "ALTER TABLE quests ADD COLUMN IF NOT EXISTS ml_score FLOAT",
             "ALTER TABLE quests ADD COLUMN IF NOT EXISTS ml_selected BOOLEAN DEFAULT TRUE",
             "ALTER TABLE quests ADD COLUMN IF NOT EXISTS issued_at TIMESTAMP DEFAULT NOW()",
-            "ALTER TABLE quests ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP"
+            "ALTER TABLE quests ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP",
+            "ALTER TABLE ml_predictions ADD COLUMN IF NOT EXISTS type VARCHAR(20)",
+            "ALTER TABLE ml_predictions ADD COLUMN IF NOT EXISTS target VARCHAR(50)",
+            "ALTER TABLE ml_predictions ADD COLUMN IF NOT EXISTS amount INT",
+            "ALTER TABLE ml_predictions ADD COLUMN IF NOT EXISTS reward INT"
         };
         
         for (String sql : alterStatements) {
@@ -189,10 +197,24 @@ public class DBConnector {
         preferencesRepository.updateLastQuestType(playerId, questType);
     }
     
-    public void saveMlPrediction(int questId, int candidateIndex, double predictedScore, boolean wasSelected) throws SQLException {
-        mlRepository.saveMlPrediction(questId, candidateIndex, predictedScore, wasSelected);
+    // Обновлённый метод с передачей объекта Quest
+    public void saveMlPrediction(int questId, int candidateIndex, double predictedScore, 
+                                  boolean wasSelected, Quest candidate) throws SQLException {
+        mlRepository.saveMlPrediction(questId, candidateIndex, predictedScore, wasSelected, candidate);
     }
     
+    // Сохранение всех предсказаний
+    public void saveAllMlPredictions(int questId, List<Quest> candidates, 
+                                      double[] scores, int bestIndex) throws SQLException {
+        mlRepository.saveAllPredictions(questId, candidates, scores, bestIndex);
+    }
+    
+    // Получение последних предсказаний для дашборда
+    public List<MLRepository.MlPredictionWithQuest> getLatestPredictions(int limit) throws SQLException {
+        return mlRepository.getLatestPredictions(limit);
+    }
+    
+    // Метод для обучения модели
     public List<Quest> getQuestsForTraining(int playerId, int limit) throws SQLException {
         return mlRepository.getQuestsForTraining(playerId, limit);
     }

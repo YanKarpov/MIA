@@ -242,17 +242,44 @@ h1 {
     transition: all 0.3s ease;
 }
 
+.stat-icon { 
+    font-size: 32px; 
+}
+
+.stat-info { 
+    display: flex; 
+    flex-direction: column; 
+}
+
+.stat-label { 
+    font-size: 12px; 
+    color: var(--gray); 
+    margin-bottom: 4px;
+}
+
+.stat-value-wrapper {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.stat-value { 
+    font-size: 28px; 
+    font-weight: 700; 
+    color: var(--cyan); 
+    line-height: 1;
+}
+
+.stat-unit { 
+    font-size: 14px; 
+    color: var(--gray); 
+}
+
 .stat-card:hover {
     transform: translateY(-2px);
     border-color: var(--cyan);
     box-shadow: 0 5px 20px rgba(0, 242, 254, 0.1);
 }
-
-.stat-icon { font-size: 32px; }
-.stat-info { display: flex; flex-direction: column; }
-.stat-label { font-size: 12px; color: var(--gray); }
-.stat-value { font-size: 28px; font-weight: 700; color: var(--cyan); }
-.stat-unit { font-size: 12px; color: var(--gray); margin-left: 4px; }
 
 .main-grid {
     display: grid;

@@ -1,131 +1,123 @@
 <!doctype html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MIA Dashboard</title>
-    <link rel="stylesheet" href="css/style.css" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
     <div class="container">
-      <header class="header">
-        <div class="logo">
-          <div class="logo-icon">
-            <img
-              src="assets/icons/minecraft-logo.svg"
-              alt="Minecraft"
-              class="logo-img"
-            />
-          </div>
-          <div>
-            <h1><span class="gradient-text">MIA</span> AI</h1>
-            <p class="subtitle">Minecraft Intelligent Adventure</p>
-          </div>
-        </div>
-        <div id="status-container"></div>
-      </header>
+        <!--#include virtual="/components/header.html" -->
 
-      <!--#include virtual="/components/navbar.html" -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon">⚡</div>
-          <div class="stat-info">
-            <span class="stat-label">Задержка</span>
-            <span class="stat-value" id="statLatency">—</span>
-            <span class="stat-unit">ms</span>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">🎯</div>
-          <div class="stat-info">
-            <span class="stat-label">Точность</span>
-            <span class="stat-value" id="statAccuracy">—</span>
-            <span class="stat-unit">%</span>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">📊</div>
-          <div class="stat-info">
-            <span class="stat-label">Квестов создано</span>
-            <span class="stat-value" id="statTotalQuests">—</span>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">🤖</div>
-          <div class="stat-info">
-            <span class="stat-label">ML модель</span>
-            <span class="stat-value" id="statModelName">MIA-Rank</span>
-          </div>
-        </div>
-      </div>
+        <!--#include virtual="/components/navbar.html" -->
 
-      <div class="main-grid">
-        <div class="card ranking-panel">
-          <div class="card-header">
-            <h2>ML Ранжирование</h2>
-            <button class="refresh-btn" id="refreshRankingBtn">Обновить</button>
-          </div>
-          <div class="card-body">
-            <div id="rankingTable" class="ranking-table">
-              <div style="padding: 40px; text-align: center">Загрузка...</div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-info">
+                    <span class="stat-label">Задержка</span>
+                    <div class="stat-value-wrapper">
+                        <span class="stat-value" id="statLatency">—</span>
+                        <span class="stat-unit">ms</span>
+                    </div>
+                </div>
             </div>
-            <div id="explanationBox" class="explanation-box"></div>
-          </div>
-        </div>
-
-        <div class="card recent-panel">
-          <div class="card-header">
-            <h2>Последние квесты</h2>
-            <span class="badge">Из БД</span>
-          </div>
-          <div class="card-body">
-            <div id="recentQuests" class="quest-list">
-              <div style="padding: 20px; text-align: center">Загрузка...</div>
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-info">
+                    <span class="stat-label">Точность</span>
+                    <div class="stat-value-wrapper">
+                        <span class="stat-value" id="statAccuracy">—</span>
+                        <span class="stat-unit">%</span>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-
-        <div class="card players-panel">
-          <div class="card-header">
-            <h2>👥 Игроки</h2>
-            <span class="badge">Статистика</span>
-          </div>
-          <div class="card-body">
-            <div id="playersTable" class="players-table">
-              <div style="padding: 20px; text-align: center">Загрузка...</div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <span class="stat-label">Всего квестов</span>
+                    <div class="stat-value-wrapper">
+                        <span class="stat-value" id="statTotalQuests">—</span>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-
-        <div class="card logs-panel">
-          <div class="card-header">
-            <h2>Логи ML-сервиса</h2>
-            <button class="clear-btn" id="clearLogsBtn">Очистить</button>
-          </div>
-          <div class="card-body">
-            <div id="logsContainer" class="logs-container">
-              <div style="padding: 20px; text-align: center">Загрузка...</div>
+            <div class="stat-card">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-info">
+                    <span class="stat-label">Ср. ML оценка</span>
+                    <div class="stat-value-wrapper">
+                        <span class="stat-value" id="statAvgScore">—</span>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
 
-      <div class="console-card">
-        <div class="console-header">
-          <span class="console-title">💻 Live Console</span>
-          <span class="console-status">listening for /quest</span>
+        <!-- Остальная часть без изменений -->
+        <div class="main-grid">
+            <div class="card ranking-panel">
+                <div class="card-header">
+                    <h2>ML Ранжирование</h2>
+                    <button class="refresh-btn" id="refreshRankingBtn">Обновить</button>
+                </div>
+                <div class="card-body">
+                    <div id="rankingTable" class="ranking-table">
+                        <div style="padding: 40px; text-align: center">Загрузка...</div>
+                    </div>
+                    <div id="explanationBox" class="explanation-box"></div>
+                </div>
+            </div>
+
+            <div class="card recent-panel">
+                <div class="card-header">
+                    <h2>Последние квесты</h2>
+                    <span class="badge">Из БД</span>
+                </div>
+                <div class="card-body">
+                    <div id="recentQuests" class="quest-list">
+                        <div style="padding: 20px; text-align: center">Загрузка...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card players-panel">
+                <div class="card-header">
+                    <h2>👥 Игроки</h2>
+                    <span class="badge">Статистика</span>
+                </div>
+                <div class="card-body">
+                    <div id="playersTable" class="players-table">
+                        <div style="padding: 20px; text-align: center">Загрузка...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card logs-panel">
+                <div class="card-header">
+                    <h2>Логи ML-сервиса</h2>
+                    <button class="clear-btn" id="clearLogsBtn">Очистить</button>
+                </div>
+                <div class="card-body">
+                    <div id="logsContainer" class="logs-container">
+                        <div style="padding: 20px; text-align: center">Загрузка...</div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="console-body" id="consoleOutput">
-          <div class="console-line">> ML Service initialized</div>
-          <div class="console-line">> Waiting for command /quest...</div>
+
+        <div class="console-card">
+            <div class="console-header">
+                <span class="console-title">💻 Live Console</span>
+                <span class="console-status">listening for /quest</span>
+            </div>
+            <div class="console-body" id="consoleOutput">
+                <div class="console-line">> ML Service initialized</div>
+                <div class="console-line">> Waiting for command /quest...</div>
+            </div>
         </div>
-      </div>
     </div>
 
     <script type="module" src="js/main.js"></script>
-  </body>
+</body>
 </html>

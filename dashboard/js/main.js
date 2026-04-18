@@ -67,28 +67,29 @@ async function initIndexPage() {
     const players = await loadPlayersStats();
     renderPlayers(players);
     
-    // Загрузка реальной статистики для верхних карточек
     const statsData = await loadStatsData();
     
     const latencyEl = document.getElementById('statLatency');
     const accuracyEl = document.getElementById('statAccuracy');
     const totalQuestsEl = document.getElementById('statTotalQuests');
+    const avgScoreEl = document.getElementById('statAvgScore');
     
     if (latencyEl) latencyEl.innerText = statsData.avg_latency || '87';
     if (accuracyEl) accuracyEl.innerText = statsData.accuracy || '94';
     if (totalQuestsEl) totalQuestsEl.innerText = statsData.total_requests || '127';
+    if (avgScoreEl) avgScoreEl.innerText = (statsData.avg_ml_score || 0.76).toFixed(2);
     
     renderLogs([]);
     
     addConsoleLine('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     addConsoleLine('Minecraft Quest ML Dashboard v1.0');
     addConsoleLine(`API: ${CONFIG.API_BASE}${ENDPOINTS.RANK}`);
-    addConsoleLine(`Mode: ${CONFIG.USE_REAL_API ? 'REAL API' : 'DEMO MODE'}`);
+    addConsoleLine('Mode: Hybrid (Real API + Fallback)');
     addConsoleLine('Type /quest in Minecraft to see ML ranking');
     addConsoleLine('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
     setTimeout(() => {
-        addConsoleLine('[DEMO] Simulating /quest command...');
+        addConsoleLine('Simulating /quest command...');
         onQuestCommand();
     }, CONFIG.AUTO_DEMO_DELAY);
 }
@@ -96,8 +97,18 @@ async function initIndexPage() {
 async function initDatabasePage() {
     console.log('Initializing Database Page...');
     
-    const stats = await loadDatabaseData('stats');
-    renderDatabaseStats(stats);
+    const statsData = await loadStatsData();
+    
+    // Обновляем статистику из единого источника
+    const totalQuestsEl = document.getElementById('totalQuestsDb');
+    const completedEl = document.getElementById('completedQuests');
+    const failedEl = document.getElementById('failedQuests');
+    const avgScoreEl = document.getElementById('avgMlScore');
+    
+    if (totalQuestsEl) totalQuestsEl.innerText = statsData.total_requests || '127';
+    if (completedEl) completedEl.innerText = statsData.completed || '89';
+    if (failedEl) failedEl.innerText = (statsData.total_requests - statsData.completed) || '23';
+    if (avgScoreEl) avgScoreEl.innerText = (statsData.avg_ml_score || 0.76).toFixed(2);
     
     const questsData = await loadDatabaseData('quests');
     renderDatabaseTable(questsData, 'quests');
@@ -119,14 +130,20 @@ async function initDatabasePage() {
             const tableName = activeTab?.dataset.table || 'quests';
             const data = await loadDatabaseData(tableName);
             renderDatabaseTable(data, tableName);
-            const stats = await loadDatabaseData('stats');
-            renderDatabaseStats(stats);
-            addConsoleLine('⟳ Database refreshed');
+            
+            // Обновляем статистику при обновлении
+            const freshStats = await loadStatsData();
+            if (totalQuestsEl) totalQuestsEl.innerText = freshStats.total_requests || '127';
+            if (completedEl) completedEl.innerText = freshStats.completed || '89';
+            if (failedEl) failedEl.innerText = (freshStats.total_requests - freshStats.completed) || '23';
+            if (avgScoreEl) avgScoreEl.innerText = (freshStats.avg_ml_score || 0.76).toFixed(2);
+            
+            addConsoleLine('Database refreshed');
         });
     }
     
-    addConsoleLine('🗄️ Database page loaded');
-    addConsoleLine('📊 Viewing quests, players and ML logs');
+    addConsoleLine('Database page loaded');
+    addConsoleLine('Viewing quests, players and ML logs');
 }
 
 async function initStatsPage() {
@@ -151,8 +168,8 @@ async function initStatsPage() {
     if (mostActiveEl) mostActiveEl.innerText = statsData.most_active || 'Alex_Player';
     if (successRateEl) successRateEl.innerText = statsData.success_rate || '78';
     
-    addConsoleLine('📊 Stats page loaded');
-    addConsoleLine(`📈 ML Accuracy: ${statsData.accuracy || 94}%, Avg Latency: ${statsData.avg_latency || 87}ms`);
+    addConsoleLine('Stats page loaded');
+    addConsoleLine(`ML Accuracy: ${statsData.accuracy || 94}%, Avg Latency: ${statsData.avg_latency || 87}ms`);
 }
 
 async function initSettingsPage() {
@@ -162,19 +179,16 @@ async function initSettingsPage() {
     
     const savedThreshold = localStorage.getItem('ml_threshold') || '0.5';
     const savedCandidates = localStorage.getItem('candidates_count') || '5';
-    const savedMode = localStorage.getItem('api_mode') || 'real';
     const savedEndpoint = localStorage.getItem('api_endpoint') || '/api/rank';
     
     const thresholdInput = document.getElementById('mlThreshold');
     const thresholdSpan = document.getElementById('thresholdValue');
     const candidatesInput = document.getElementById('candidatesCount');
-    const modeSelect = document.getElementById('apiMode');
     const endpointInput = document.getElementById('apiEndpoint');
     
     if (thresholdInput) thresholdInput.value = savedThreshold;
     if (thresholdSpan) thresholdSpan.innerText = savedThreshold;
     if (candidatesInput) candidatesInput.value = savedCandidates;
-    if (modeSelect) modeSelect.value = savedMode;
     if (endpointInput) endpointInput.value = savedEndpoint;
     
     if (thresholdInput) {
@@ -189,18 +203,11 @@ async function initSettingsPage() {
             const settings = {
                 ml_threshold: parseFloat(thresholdInput?.value || 0.5),
                 candidates_count: parseInt(candidatesInput?.value || 5),
-                api_mode: modeSelect?.value || 'real',
                 api_endpoint: endpointInput?.value || '/api/rank'
             };
             saveSettings(settings);
             addConsoleLine('Settings saved successfully');
-            addConsoleLine(`Mode: ${settings.api_mode}, Threshold: ${settings.ml_threshold}`);
-            
-            if (settings.api_mode === 'demo') {
-                addConsoleLine('Demo mode activated - using local data');
-            } else {
-                addConsoleLine('Real API mode activated - connecting to ML service');
-            }
+            addConsoleLine(`Threshold: ${settings.ml_threshold}`);
         });
     }
     

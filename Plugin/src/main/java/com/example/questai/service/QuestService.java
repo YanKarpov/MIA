@@ -122,9 +122,13 @@ public class QuestService {
 
         int questId = db.saveQuest(playerId, bestQuest, gamePlayer, bestScore, true);
         
+        // Сохраняем ВСЕХ кандидатов с их деталями
         if (results != null && !results.isEmpty()) {
             for (RankResponse r : results) {
-                db.saveMlPrediction(questId, r.getQuestIndex(), r.getScore(), r.getQuestIndex() == bestIndex);
+                QuestCandidate candidate = candidates.get(r.getQuestIndex());
+                Quest quest = candidate.getQuest();
+                db.saveMlPrediction(questId, r.getQuestIndex(), r.getScore(), 
+                                    r.getQuestIndex() == bestIndex, quest);
             }
         }
         

@@ -10,18 +10,7 @@
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <div class="logo">
-                <div class="logo-icon">
-                    <span class="neon-glow">📈</span>
-                </div>
-                <div>
-                    <h1>Minecraft <span class="gradient-text">MIA ML</span></h1>
-                    <p class="subtitle">Статистика и метрики ML-модели</p>
-                </div>
-            </div>
-            <div id="status-container"></div>
-        </header>
+        <!--#include virtual="/components/header.html" -->
 
         <!--#include virtual="/components/navbar.html" -->
 
@@ -30,30 +19,38 @@
                 <div class="stat-icon">🎯</div>
                 <div class="stat-info">
                     <span class="stat-label">Точность Модели</span>
-                    <span class="stat-value" id="statAccuracy">—</span>
-                    <span class="stat-unit">%</span>
+                    <div class="stat-value-wrapper">
+                        <span class="stat-value" id="statAccuracy">—</span>
+                        <span class="stat-unit">%</span>
+                    </div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">⚡</div>
                 <div class="stat-info">
                     <span class="stat-label">Средняя Задержка</span>
-                    <span class="stat-value" id="statLatency">—</span>
-                    <span class="stat-unit">ms</span>
+                    <div class="stat-value-wrapper">
+                        <span class="stat-value" id="statLatency">—</span>
+                        <span class="stat-unit">ms</span>
+                    </div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">📊</div>
                 <div class="stat-info">
                     <span class="stat-label">Всего запросов</span>
-                    <span class="stat-value" id="statRequests">—</span>
+                    <div class="stat-value-wrapper">
+                        <span class="stat-value" id="statRequests">—</span>
+                    </div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">⭐</div>
                 <div class="stat-info">
                     <span class="stat-label">Средняя ML оценка</span>
-                    <span class="stat-value" id="statAvgScore">—</span>
+                    <div class="stat-value-wrapper">
+                        <span class="stat-value" id="statAvgScore">—</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -78,29 +75,37 @@
                 <div class="stat-icon">🏆</div>
                 <div class="stat-info">
                     <span class="stat-label">Лучший игрок</span>
-                    <span class="stat-value" id="topPlayer">—</span>
+                    <div class="stat-value-wrapper">
+                        <span class="stat-value" id="topPlayer">—</span>
+                    </div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">💀</div>
                 <div class="stat-info">
                     <span class="stat-label">Самый активный</span>
-                    <span class="stat-value" id="mostActive">—</span>
+                    <div class="stat-value-wrapper">
+                        <span class="stat-value" id="mostActive">—</span>
+                    </div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">📈</div>
                 <div class="stat-info">
                     <span class="stat-label">Успешность</span>
-                    <span class="stat-value" id="successRate">—</span>
-                    <span class="stat-unit">%</span>
+                    <div class="stat-value-wrapper">
+                        <span class="stat-value" id="successRate">—</span>
+                        <span class="stat-unit">%</span>
+                    </div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">🤖</div>
                 <div class="stat-info">
                     <span class="stat-label">ML Model</span>
-                    <span class="stat-value">MIA‑Rank</span>
+                    <div class="stat-value-wrapper">
+                        <span class="stat-value">MIA‑Rank</span>
+                    </div>
                 </div>
             </div>
         </div>

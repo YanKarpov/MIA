@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import health, quests, players, stats, database, train, rank
+from app.routes import health, quests, players, stats, database, train, rank, predictions
 from app.model import load_model
 from app.logger import ml_logger
 
@@ -20,6 +20,7 @@ app.include_router(stats.router)
 app.include_router(database.router)
 app.include_router(train.router)
 app.include_router(rank.router)
+app.include_router(predictions.router)
 
 @app.on_event("startup")
 def startup():

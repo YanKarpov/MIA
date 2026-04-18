@@ -35,10 +35,10 @@ export function renderRanking(candidates) {
     const bestScorePercent = Math.round(best.mlScore * 100);
     const explanationBox = document.getElementById('explanationBox');
     if (explanationBox) {
-        explanationBox.innerHTML = '<strong>✅ Выбран квест:</strong> ' + best.type + ' ' + best.target + ' x' + best.amount + ' (оценка ' + best.mlScore.toFixed(2) + ')<br>' +
-            '<strong>📊 Вероятность успеха:</strong> ' + bestScorePercent + '%<br>' +
-            '<strong>🎯 Ключевые факторы:</strong> ' + getExplanationByType(best.type) + '<br>' +
-            '<strong>🤖 ML модель:</strong> XGBoost Classifier (F1-score: 0.87)';
+        explanationBox.innerHTML = '<strong>Выбран квест:</strong> ' + best.type + ' ' + best.target + ' x' + best.amount + ' (оценка ' + best.mlScore.toFixed(2) + ')<br>' +
+            '<strong>Вероятность успеха:</strong> ' + bestScorePercent + '%<br>' +
+            '<strong>Ключевые факторы:</strong> ' + getExplanationByType(best.type) + '<br>' +
+            '<strong>ML модель:</strong> MIA-RANK';
     }
 }
 

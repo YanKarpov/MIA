@@ -9,49 +9,44 @@
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <div class="logo">
-                <div class="logo-icon">
-                    <span class="neon-glow">🗄️</span>
-                </div>
-                <div>
-                    <h1>Minecraft <span class="gradient-text">Quest ML</span></h1>
-                    <p class="subtitle">База данных и логи</p>
-                </div>
-            </div>
-            <div id="status-container"></div>
-        </header>
-
+        <!--#include virtual="/components/header.html" -->
         <!--#include virtual="/components/navbar.html" -->
 
-        <!-- Карточки статистики (ПЕРЕД таблицей) -->
         <div class="stats-grid" style="margin-bottom: 20px;">
             <div class="stat-card">
                 <div class="stat-icon">📊</div>
                 <div class="stat-info">
                     <span class="stat-label">Всего квестов</span>
-                    <span class="stat-value" id="totalQuestsDb">—</span>
+                    <div class="stat-value-wrapper">
+                        <span class="stat-value" id="totalQuestsDb">—</span>
+                    </div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">✅</div>
                 <div class="stat-info">
                     <span class="stat-label">Успешно</span>
-                    <span class="stat-value" id="completedQuests">—</span>
+                    <div class="stat-value-wrapper">
+                        <span class="stat-value" id="completedQuests">—</span>
+                    </div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">❌</div>
                 <div class="stat-info">
                     <span class="stat-label">Провалено</span>
-                    <span class="stat-value" id="failedQuests">—</span>
+                    <div class="stat-value-wrapper">
+                        <span class="stat-value" id="failedQuests">—</span>
+                    </div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">⭐</div>
                 <div class="stat-info">
                     <span class="stat-label">Ср. ML Score</span>
-                    <span class="stat-value" id="avgMlScore">—</span>
+                    <div class="stat-value-wrapper">
+                        <span class="stat-value" id="avgMlScore">—</span>
+                    </div>
                 </div>
             </div>
         </div>

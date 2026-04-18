@@ -3,36 +3,31 @@ import { getCurrentPlayer } from './utils.js';
 import { FALLBACK_DATA } from './data.js';
 import { addLogMessage } from './handlers.js';
 
-export async function fetchRankingFromML() {
+export async function fetchLatestPredictions() {
     try {
-        const response = await fetch(`${CONFIG.API_BASE}${ENDPOINTS.RANK}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                player_uuid: getCurrentPlayer(),
-                timestamp: new Date().toISOString()
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+        const response = await fetch(`${CONFIG.API_BASE}/predictions/latest?limit=10`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.length > 0) {
+                addLogMessage(`Loaded ${data.length} latest predictions from DB`, 'success');
+                return data;
+            }
         }
-        
-        const data = await response.json();
-        addLogMessage('ML Service responded successfully', 'success');
-        return data;
-    } catch (error) {
-        console.warn('ML Service unavailable:', error);
-        addLogMessage(`ML Service error: ${error.message}, using fallback`, 'warning');
-        return null;
+    } catch (e) {
+        console.warn('Failed to fetch predictions:', e);
     }
+    return null;
 }
 
 export async function fetchRecentQuests() {
     try {
         const response = await fetch(`${CONFIG.API_BASE}${ENDPOINTS.QUESTS_RECENT}?limit=10`);
         if (response.ok) {
-            return await response.json();
+            const data = await response.json();
+            if (data && data.length > 0) {
+                addLogMessage(`Loaded ${data.length} recent quests from DB`, 'success');
+                return data;
+            }
         }
     } catch (e) {
         console.warn('Failed to fetch recent quests:', e);
@@ -44,7 +39,11 @@ export async function fetchPlayersStats() {
     try {
         const response = await fetch(`${CONFIG.API_BASE}${ENDPOINTS.PLAYERS_STATS}`);
         if (response.ok) {
-            return await response.json();
+            const data = await response.json();
+            if (data && data.length > 0) {
+                addLogMessage(`Loaded ${data.length} players from DB`, 'success');
+                return data;
+            }
         }
     } catch (e) {
         console.warn('Failed to fetch players stats:', e);
@@ -62,89 +61,66 @@ export async function checkMLHealth() {
 }
 
 export async function loadCandidates() {
-    if (CONFIG.USE_REAL_API) {
-        const data = await fetchRankingFromML();
-        if (data && data.candidates) {
-            return data.candidates.map(c => ({
-                id: c.id,
-                type: c.type,
-                target: c.target,
-                amount: c.amount,
-                reward: c.reward,
-                mlScore: c.ml_score || c.mlScore
-            }));
-        }
+    // Сначала пытаемся загрузить реальные предсказания из БД
+    const predictions = await fetchLatestPredictions();
+    if (predictions && predictions.length > 0) {
+        const candidates = predictions.map((p, idx) => ({
+            id: idx,
+            type: p.type,
+            target: p.target,
+            amount: p.amount,
+            reward: p.reward,
+            mlScore: p.score
+        }));
+        addLogMessage(`Loaded ${candidates.length} real predictions from DB`, 'success');
+        return candidates;
     }
+    
+    // Fallback на демо-данные
+    addLogMessage('Using fallback candidates data', 'warning');
     return [...FALLBACK_DATA.candidates];
 }
 
 export async function loadRecentQuests() {
-    if (CONFIG.USE_REAL_API) {
-        const data = await fetchRecentQuests();
-        if (data) return data;
+    const data = await fetchRecentQuests();
+    if (data && data.length > 0) {
+        return data;
     }
+    addLogMessage('Using fallback quests data', 'warning');
     return [...FALLBACK_DATA.quests];
 }
 
 export async function loadPlayersStats() {
-    if (CONFIG.USE_REAL_API) {
-        const data = await fetchPlayersStats();
-        if (data) return data;
+    const data = await fetchPlayersStats();
+    if (data && data.length > 0) {
+        return data;
     }
+    addLogMessage('Using fallback players data', 'warning');
     return [...FALLBACK_DATA.players];
 }
 
 export async function updateSystemStatus() {
     const status = {
         ml_service: false,
-        postgres: true,      // ← ЗАГЛУШКА: всегда работает
-        minecraft: true      // ← ЗАГЛУШКА: всегда работает
+        postgres: true,
+        minecraft: true
     };
     
-    // Реальная проверка только для ML сервера
     try {
         const mlResponse = await fetch(`${CONFIG.API_BASE}${ENDPOINTS.HEALTH}`);
         status.ml_service = mlResponse.ok;
+        if (status.ml_service) {
+            addLogMessage('ML Service is healthy', 'success');
+        } else {
+            addLogMessage('ML Service is unavailable', 'warning');
+        }
     } catch (e) {
         status.ml_service = false;
+        addLogMessage('ML Service connection failed', 'warning');
     }
     
     return status;
 }
-
-// export async function updateSystemStatus() {
-//     const status = {
-//         ml_service: false,
-//         postgres: false,
-//         minecraft: false
-//     };
-    
-//     // Реальная проверка ML сервера
-//     try {
-//         const mlResponse = await fetch(`${CONFIG.API_BASE}/health`);
-//         status.ml_service = mlResponse.ok;
-//     } catch (e) {
-//         status.ml_service = false;
-//     }
-    
-//     // Проверка PostgreSQL (через ML сервис)
-//     try {
-//         const dbResponse = await fetch(`${CONFIG.API_BASE}/db/health`);
-//         status.postgres = dbResponse.ok;
-//     } catch (e) {
-//         status.postgres = false;
-//     }
-    
-//     // Проверка Minecraft (через ML сервис или прямой запрос)
-//     try {
-//         const mcResponse = await fetch(`${CONFIG.API_BASE}/minecraft/status`);
-//         status.minecraft = mcResponse.ok;
-//     } catch (e) {
-//         status.minecraft = false;
-//     }
-    
-//     return status;
-// }
 
 export async function renderStatusBadges() {
     const container = document.getElementById('status-container');
