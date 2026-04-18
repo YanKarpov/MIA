@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from app.database import get_recent_quests_from_db
 from app.logger import ml_logger
 
