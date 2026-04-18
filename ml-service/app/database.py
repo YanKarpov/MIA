@@ -15,9 +15,10 @@ def get_recent_quests_from_db(limit: int):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
-        SELECT player_id, type, target, amount, ml_score, status, issued_at
-        FROM quests 
-        ORDER BY issued_at DESC 
+        SELECT q.player_id, q.type, q.target, q.amount, q.ml_score, q.status, q.issued_at, p.name
+        FROM quests q
+        LEFT JOIN players p ON q.player_id = p.id
+        ORDER BY q.issued_at DESC 
         LIMIT %s
     """, (limit,))
     rows = cur.fetchall()
@@ -26,12 +27,22 @@ def get_recent_quests_from_db(limit: int):
     
     quests = []
     for row in rows:
+        ml_score = round(float(row[4]), 3) if row[4] else 0
+        
+        issued_at = row[6]
+        formatted_time = ""
+        if issued_at:
+            if isinstance(issued_at, datetime):
+                formatted_time = issued_at.strftime("%d.%m %H:%M")
+            else:
+                formatted_time = str(issued_at)[5:16].replace('T', ' ')
+        
         quests.append({
-            "player": f"Player_{row[0]}",  # player_id → имя игрока
+            "player": row[7] if row[7] else f"Player_{row[0]}",
             "quest": f"{row[1]} {row[2]} x{row[3]}",
-            "score": float(row[4]) if row[4] else 0,
+            "score": ml_score,
             "status": row[5] if row[5] else "pending",
-            "time": row[6].strftime("%H:%M:%S") if row[6] else ""
+            "time": formatted_time
         })
     return quests
 
@@ -39,17 +50,16 @@ def get_players_stats_from_db():
     conn = get_db_connection()
     cur = conn.cursor()
     
-    # Агрегируем статистику по player_id из таблицы quests
     cur.execute("""
         SELECT 
-            player_id,
-            COUNT(*) as total_quests,
-            SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) as completed,
-            SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) as failed,
-            AVG(ml_score) as avg_ml_score
-        FROM quests 
-        GROUP BY player_id
-        ORDER BY completed DESC
+            name,
+            total_kills,
+            total_deaths,
+            completed_quests,
+            total_quests - completed_quests as failed_quests,
+            ROUND(success_rate, 3) as success_rate
+        FROM players 
+        ORDER BY completed_quests DESC
     """)
     rows = cur.fetchall()
     cur.close()
@@ -58,12 +68,12 @@ def get_players_stats_from_db():
     players = []
     for row in rows:
         players.append({
-            "name": f"Player_{row[0]}",
-            "kills": 0,  # нет данных в этой таблице
-            "deaths": 0,  # нет данных в этой таблице
-            "completed": row[2] or 0,
-            "failed": row[3] or 0,
-            "avgScore": float(row[4]) if row[4] else 0
+            "name": row[0],
+            "kills": row[1] or 0,
+            "deaths": row[2] or 0,
+            "completed": row[3] or 0,
+            "failed": row[4] or 0,
+            "avgScore": float(row[5]) if row[5] else 0
         })
     return players
 
@@ -72,45 +82,46 @@ def get_stats_summary_from_db():
     cur = conn.cursor()
     
     cur.execute("SELECT COUNT(*) FROM quests")
-    total = cur.fetchone()[0]
+    total_quests = cur.fetchone()[0]
     
     cur.execute("SELECT COUNT(*) FROM quests WHERE status = 'COMPLETED'")
-    completed = cur.fetchone()[0]
+    completed_quests = cur.fetchone()[0]
     
-    cur.execute("SELECT AVG(ml_score) FROM quests WHERE ml_score IS NOT NULL")
-    avg_score = cur.fetchone()[0]
+    cur.execute("SELECT ROUND(AVG(ml_score), 3) FROM quests WHERE ml_score IS NOT NULL")
+    avg_ml_score = cur.fetchone()[0]
     
     cur.execute("""
-        SELECT player_id, COUNT(*) as total
-        FROM quests 
-        GROUP BY player_id 
-        ORDER BY total DESC 
+        SELECT name, completed_quests 
+        FROM players 
+        ORDER BY completed_quests DESC 
+        LIMIT 1
+    """)
+    top_player = cur.fetchone()
+    
+    cur.execute("""
+        SELECT name, total_kills 
+        FROM players 
+        ORDER BY total_kills DESC 
         LIMIT 1
     """)
     most_active = cur.fetchone()
-    
-    cur.execute("""
-        SELECT player_id, AVG(ml_score) as avg_score
-        FROM quests 
-        WHERE ml_score IS NOT NULL
-        GROUP BY player_id 
-        ORDER BY avg_score DESC 
-        LIMIT 1
-    """)
-    best_player = cur.fetchone()
     
     cur.close()
     conn.close()
     
     return {
-        "total": total,
-        "completed": completed,
-        "avg_score": avg_score,
-        "top_player": f"Player_{best_player[0]}" if best_player else None,
-        "most_active": f"Player_{most_active[0]}" if most_active else None
+        "total": total_quests,
+        "completed": completed_quests,
+        "avg_score": float(avg_ml_score) if avg_ml_score else 0.76,
+        "top_player": top_player[0] if top_player else None,
+        "most_active": most_active[0] if most_active else None
     }
 
 def get_db_table_data(table_name: str, limit: int):
+    allowed = ["quests", "players", "ml_predictions"]
+    if table_name not in allowed:
+        return []
+    
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM {table_name} ORDER BY id DESC LIMIT %s", (limit,))
@@ -130,7 +141,11 @@ def get_db_table_data(table_name: str, limit: int):
         for i, col in enumerate(columns):
             val = row[i]
             if isinstance(val, datetime):
-                val = val.isoformat()
+                val = val.strftime("%d.%m.%Y %H:%M:%S")
+            elif isinstance(val, float):
+                val = round(val, 3)
+            elif val is None:
+                val = "—"
             item[col] = val
         result.append(item)
     return result

@@ -1,7 +1,7 @@
 // Конфигурация приложения
 export const CONFIG = {
     API_BASE: '/api',
-    USE_REAL_API: false,  
+    USE_REAL_API: true,  
     LOGS_LIMIT: 30,
     AUTO_DEMO_DELAY: 3000,
 };

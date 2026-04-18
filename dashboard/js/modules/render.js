@@ -67,14 +67,12 @@ export function renderPlayers(players) {
     if (!players) return;
     
     let html = '<table class="players-table">';
-    html += '<thead><tr><th>Игрок</th><th>Убийств</th><th>Смертей</th><th>Успешно</th><th>Провалов</th><th>Avg ML Score</th></tr></thead>';
+    html += '<thead><tr><th>Игрок</th><th>Успешно</th><th>Провалов</th><th>Avg ML Score</th></tr></thead>';
     html += '<tbody>';
     
     players.forEach(p => {
         html += '<tr>';
-        html += '<td>' + p.name + '</td>';
-        html += '<td>' + (p.kills || 0) + '</td>';
-        html += '<td>' + (p.deaths || 0) + '</td>';
+        html += '<td style="color: var(--cyan); font-weight: 600;">' + p.name + '</td>';
         html += '<td style="color: #00ff88;">' + (p.completed || 0) + '</td>';
         html += '<td style="color: #ff4444;">' + (p.failed || 0) + '</td>';
         html += '<td style="color: #00f2fe;">' + (p.avgScore || 0).toFixed(2) + '</td>';

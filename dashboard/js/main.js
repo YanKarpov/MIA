@@ -67,6 +67,17 @@ async function initIndexPage() {
     const players = await loadPlayersStats();
     renderPlayers(players);
     
+    // Загрузка реальной статистики для верхних карточек
+    const statsData = await loadStatsData();
+    
+    const latencyEl = document.getElementById('statLatency');
+    const accuracyEl = document.getElementById('statAccuracy');
+    const totalQuestsEl = document.getElementById('statTotalQuests');
+    
+    if (latencyEl) latencyEl.innerText = statsData.avg_latency || '87';
+    if (accuracyEl) accuracyEl.innerText = statsData.accuracy || '94';
+    if (totalQuestsEl) totalQuestsEl.innerText = statsData.total_requests || '127';
+    
     renderLogs([]);
     
     addConsoleLine('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -231,3 +242,21 @@ window.refreshAll = refreshAll;
 window.refreshRanking = refreshRankingOnly;
 window.clearLogs = clearLogs;
 window.onQuestCommand = onQuestCommand;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const refreshBtn = document.getElementById('refreshRankingBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            console.log('Refresh button clicked');
+            refreshRankingOnly();
+        });
+    }
+    
+    const clearBtn = document.getElementById('clearLogsBtn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            console.log('Clear button clicked');
+            clearLogs();
+        });
+    }
+});

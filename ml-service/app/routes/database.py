@@ -6,7 +6,7 @@ router = APIRouter(tags=["Database"])
 
 @router.get("/db/{table_name}")
 def get_db_table(table_name: str, limit: int = Query(50, ge=1, le=200)):
-    allowed = ["quests", "players", "ml_logs"]
+    allowed = ["quests", "players", "ml_predictions"]
     if table_name not in allowed:
         raise HTTPException(404, f"Table '{table_name}' not found")
     

@@ -24,25 +24,8 @@
 
         <!--#include virtual="/components/navbar.html" -->
 
-
-        <div class="card">
-            <div class="card-header">
-                <h2>📋 Просмотр таблиц</h2>
-                <button class="refresh-btn" id="refreshDbBtn">🔄 Обновить</button>
-            </div>
-            <div class="card-body">
-                <div class="table-tabs">
-                    <button class="table-tab active" data-table="quests">📜 Квесты</button>
-                    <button class="table-tab" data-table="players">👥 Игроки</button>
-                    <button class="table-tab" data-table="ml_logs">🤖 ML Логи</button>
-                </div>
-                <div class="db-table-wrapper" id="dbTableContainer">
-                    <div style="padding: 40px; text-align: center;">Загрузка...</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="stats-grid" style="margin-top: 20px;">
+        <!-- Карточки статистики (ПЕРЕД таблицей) -->
+        <div class="stats-grid" style="margin-bottom: 20px;">
             <div class="stat-card">
                 <div class="stat-icon">📊</div>
                 <div class="stat-info">
@@ -69,6 +52,23 @@
                 <div class="stat-info">
                     <span class="stat-label">Ср. ML Score</span>
                     <span class="stat-value" id="avgMlScore">—</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>📋 Просмотр таблиц</h2>
+                <button class="refresh-btn" id="refreshDbBtn">🔄 Обновить</button>
+            </div>
+            <div class="card-body">
+                <div class="table-tabs">
+                    <button class="table-tab active" data-table="quests">📜 Квесты</button>
+                    <button class="table-tab" data-table="players">👥 Игроки</button>
+                    <button class="table-tab" data-table="ml_predictions">🤖 ML Логи</button>
+                </div>
+                <div class="db-table-wrapper" id="dbTableContainer">
+                    <div style="padding: 40px; text-align: center;">Загрузка...</div>
                 </div>
             </div>
         </div>
