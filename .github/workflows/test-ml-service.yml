@@ -27,35 +27,16 @@ jobs:
     - name: Test ML model loading
       run: |
         cd ml-service
-        python -c "
-import pickle
-import sys
-try:
-    with open('model.pkl', 'rb') as f:
-        model = pickle.load(f)
-    print('Model loaded successfully')
-except Exception as e:
-    print(f'Failed to load model: {e}')
-    sys.exit(1)
-"
+        python test_model.py
 
     - name: Verify app structure
       run: |
         cd ml-service
-        test -d app && echo "app/ exists"
-        test -f requirements.txt && echo "requirements.txt exists"
-        test -f model.pkl && echo "model.pkl exists"
-        echo "Structure check passed"
+        test -d app && echo "✓ app/ exists"
+        test -f requirements.txt && echo "✓ requirements.txt exists"
+        test -f model.pkl && echo "✓ model.pkl exists"
 
     - name: Try import app module
       run: |
         cd ml-service
-        python -c "
-import sys
-sys.path.insert(0, '.')
-try:
-    import app
-    print('app module can be imported')
-except Exception as e:
-    print(f'Import warning: {e}')
-"
+        python -c "import app; print('✓ app module can be imported')"
