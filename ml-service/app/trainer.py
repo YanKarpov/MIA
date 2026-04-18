@@ -1,5 +1,5 @@
 import numpy as np
-from app.db import get_connection
+from app.database import get_db_connection
 from app.model import fit
 from app.logger import ml_logger
 
@@ -9,7 +9,7 @@ last_train_count = 0
 
 def get_records_count():
     """Получает количество завершённых квестов"""
-    conn = get_connection()
+    conn = get_db_connection()
     cur = conn.cursor()
 
     cur.execute("""
@@ -26,7 +26,7 @@ def get_records_count():
 
 def load_data():
     """Загружает данные для обучения из БД"""
-    conn = get_connection()
+    conn = get_db_connection()
     cur = conn.cursor()
 
     cur.execute("""
@@ -127,7 +127,7 @@ def get_training_stats():
     """Возвращает статистику для отладки"""
     current_count = get_records_count()
     
-    conn = get_connection()
+    conn = get_db_connection()
     cur = conn.cursor()
     
     cur.execute("""
