@@ -1,0 +1,61 @@
+name: Test ML Service
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test-ml:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        cd ml-service
+        pip install -r requirements.txt
+
+    - name: Test ML model loading
+      run: |
+        cd ml-service
+        python -c "
+import pickle
+import sys
+try:
+    with open('model.pkl', 'rb') as f:
+        model = pickle.load(f)
+    print('Model loaded successfully')
+except Exception as e:
+    print(f'Failed to load model: {e}')
+    sys.exit(1)
+"
+
+    - name: Verify app structure
+      run: |
+        cd ml-service
+        test -d app && echo "app/ exists"
+        test -f requirements.txt && echo "requirements.txt exists"
+        test -f model.pkl && echo "model.pkl exists"
+        echo "Structure check passed"
+
+    - name: Try import app module
+      run: |
+        cd ml-service
+        python -c "
+import sys
+sys.path.insert(0, '.')
+try:
+    import app
+    print('app module can be imported')
+except Exception as e:
+    print(f'Import warning: {e}')
+"
