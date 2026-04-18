@@ -27,6 +27,7 @@ jobs:
     - name: Test ML model loading
       run: |
         cd ml-service
+        ls -la
         python test_model.py
 
     - name: Verify app structure

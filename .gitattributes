@@ -23,3 +23,5 @@ data/postgres/** binary
 __pycache__/ binary
 ml-service/__pycache__/ binary
 ml-service/*.egg-info/ binary
+
+*.pkl binary
