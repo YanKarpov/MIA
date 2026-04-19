@@ -1,11 +1,11 @@
 # MIA Quest AI Plugin Configuration
 ml:
   # Количество кандидатов для ранжирования (от 1 до 10)
-  candidates_count: 10
+  candidates_count: 5
   
   # Порог ML модели (от 0.0 до 1.0)
   # Кандидаты с оценкой ниже порога не предлагаются игроку
-  threshold: 0.5
+  threshold: 0.2
 
 # Адрес ML сервиса (менять только при переносе на другой хост)
 ml_service_url: "http://ml-service:8000"
