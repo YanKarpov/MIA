@@ -20,7 +20,8 @@ import {
     onQuestCommand,
     loadDatabaseData,
     loadStatsData,
-    saveSettings
+    saveSettings,
+    loadSettingsFromStorage
 } from './modules/handlers.js';
 import { loadCandidates, loadRecentQuests, loadPlayersStats, renderStatusBadges } from './modules/api.js';
 
@@ -84,12 +85,12 @@ async function initIndexPage() {
     addConsoleLine('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     addConsoleLine('Minecraft Quest ML Dashboard v1.0');
     addConsoleLine(`API: ${CONFIG.API_BASE}${ENDPOINTS.RANK}`);
-    addConsoleLine('Mode: Hybrid (Real API + Fallback)');
-    addConsoleLine('Type /quest in Minecraft to see ML ranking');
+    addConsoleLine('Режим: Гибридный (API + Запасные данные)');
+    addConsoleLine('Введите /quest в Minecraft для ранжирования');
     addConsoleLine('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
     setTimeout(() => {
-        addConsoleLine('Simulating /quest command...');
+        addConsoleLine('Демонстрация: симуляция команды /quest...');
         onQuestCommand();
     }, CONFIG.AUTO_DEMO_DELAY);
 }
@@ -99,7 +100,6 @@ async function initDatabasePage() {
     
     const statsData = await loadStatsData();
     
-    // Обновляем статистику из единого источника
     const totalQuestsEl = document.getElementById('totalQuestsDb');
     const completedEl = document.getElementById('completedQuests');
     const failedEl = document.getElementById('failedQuests');
@@ -131,19 +131,18 @@ async function initDatabasePage() {
             const data = await loadDatabaseData(tableName);
             renderDatabaseTable(data, tableName);
             
-            // Обновляем статистику при обновлении
             const freshStats = await loadStatsData();
             if (totalQuestsEl) totalQuestsEl.innerText = freshStats.total_requests || '127';
             if (completedEl) completedEl.innerText = freshStats.completed || '89';
             if (failedEl) failedEl.innerText = (freshStats.total_requests - freshStats.completed) || '23';
             if (avgScoreEl) avgScoreEl.innerText = (freshStats.avg_ml_score || 0.76).toFixed(2);
             
-            addConsoleLine('Database refreshed');
+            addConsoleLine('База данных обновлена');
         });
     }
     
-    addConsoleLine('Database page loaded');
-    addConsoleLine('Viewing quests, players and ML logs');
+    addConsoleLine('Страница базы данных загружена');
+    addConsoleLine('Просмотр квестов, игроков и ML логов');
 }
 
 async function initStatsPage() {
@@ -168,8 +167,8 @@ async function initStatsPage() {
     if (mostActiveEl) mostActiveEl.innerText = statsData.most_active || 'Alex_Player';
     if (successRateEl) successRateEl.innerText = statsData.success_rate || '78';
     
-    addConsoleLine('Stats page loaded');
-    addConsoleLine(`ML Accuracy: ${statsData.accuracy || 94}%, Avg Latency: ${statsData.avg_latency || 87}ms`);
+    addConsoleLine('Страница статистики загружена');
+    addConsoleLine(`Точность ML: ${statsData.accuracy || 94}%, Средняя задержка: ${statsData.avg_latency || 87}ms`);
 }
 
 async function initSettingsPage() {
@@ -206,16 +205,100 @@ async function initSettingsPage() {
                 api_endpoint: endpointInput?.value || '/api/rank'
             };
             saveSettings(settings);
-            addConsoleLine('Settings saved successfully');
-            addConsoleLine(`Threshold: ${settings.ml_threshold}`);
+            addConsoleLine(`Настройки сохранены: Порог=${settings.ml_threshold}, Кандидатов=${settings.candidates_count}`);
+            addConsoleLine(`API Endpoint: ${settings.api_endpoint}`);
         });
     }
     
-    addConsoleLine('Settings page loaded');
-    addConsoleLine('Configure ML parameters and API endpoints');
+    loadMetricsFromStorage();
+    
+    const trainBtn = document.getElementById('trainModelBtn');
+    if (trainBtn) {
+        trainBtn.addEventListener('click', async () => {
+            addConsoleLine('Запуск переобучения модели...');
+            trainBtn.disabled = true;
+            trainBtn.textContent = 'Обучение...';
+            
+            try {
+                const response = await fetch('/api/train', { method: 'POST' });
+                if (response.ok) {
+                    const data = await response.json();
+                    addConsoleLine(`Модель успешно обучена: ${data.message || 'Готово'}`);
+                    
+                    updateMetricsDisplay(data);
+                    saveMetricsToStorage(data);
+                    
+                    const statusEl = document.getElementById('modelStatus');
+                    if (statusEl) {
+                        statusEl.innerHTML = 'Модель успешно обновлена';
+                        setTimeout(() => {
+                            statusEl.innerHTML = 'Модель загружена, готова к работе';
+                        }, 3000);
+                    }
+                } else {
+                    addConsoleLine(`Ошибка обучения: HTTP ${response.status}`);
+                }
+            } catch (e) {
+                addConsoleLine(`Ошибка обучения: ${e.message}`);
+            } finally {
+                trainBtn.disabled = false;
+                trainBtn.textContent = 'Обновить модель';
+            }
+        });
+    }
+    
+    await updateModelStatus();
+    
+    addConsoleLine('Страница управления ML загружена');
+    addConsoleLine('Настройка параметров и переобучение модели');
+}
+
+function loadMetricsFromStorage() {
+    const savedMetrics = localStorage.getItem('train_metrics');
+    if (savedMetrics) {
+        const metrics = JSON.parse(savedMetrics);
+        updateMetricsDisplay(metrics);
+    }
+}
+
+function saveMetricsToStorage(metrics) {
+    localStorage.setItem('train_metrics', JSON.stringify(metrics));
+}
+
+function updateMetricsDisplay(metrics) {
+    const accuracyEl = document.getElementById('metricAccuracy');
+    const f1El = document.getElementById('metricF1');
+    const samplesEl = document.getElementById('metricSamples');
+    const timeEl = document.getElementById('metricTime');
+    
+    if (accuracyEl && metrics.accuracy) accuracyEl.innerText = `${(metrics.accuracy * 100).toFixed(1)}%`;
+    if (f1El && metrics.f1_score) f1El.innerText = metrics.f1_score.toFixed(3);
+    if (samplesEl && metrics.samples) samplesEl.innerText = metrics.samples;
+    if (timeEl && metrics.timestamp) timeEl.innerText = new Date(metrics.timestamp).toLocaleString();
+}
+
+async function updateModelStatus() {
+    try {
+        const response = await fetch('/api/health');
+        if (response.ok) {
+            const statusEl = document.getElementById('modelStatus');
+            if (statusEl) {
+                statusEl.innerHTML = 'Модель загружена, готова к работе';
+            }
+        } else {
+            throw new Error('Health check failed');
+        }
+    } catch (e) {
+        const statusEl = document.getElementById('modelStatus');
+        if (statusEl) {
+            statusEl.innerHTML = 'ML сервис недоступен';
+        }
+    }
 }
 
 async function init() {
+    loadSettingsFromStorage();
+    
     highlightActiveNav();
     await renderStatusBadges();
     
@@ -240,6 +323,9 @@ async function init() {
     
     setInterval(async () => {
         await renderStatusBadges();
+        if (page === 'settings') {
+            await updateModelStatus();
+        }
     }, 10000);
 }
 
@@ -254,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshBtn = document.getElementById('refreshRankingBtn');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', () => {
-            console.log('Refresh button clicked');
+            console.log('Кнопка обновления нажата');
             refreshRankingOnly();
         });
     }
@@ -262,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearBtn = document.getElementById('clearLogsBtn');
     if (clearBtn) {
         clearBtn.addEventListener('click', () => {
-            console.log('Clear button clicked');
+            console.log('Кнопка очистки нажата');
             clearLogs();
         });
     }

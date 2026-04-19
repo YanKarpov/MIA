@@ -66,9 +66,9 @@ export async function refreshRankingOnly() {
 }
 
 export async function onQuestCommand() {
-    addLogMessage('📡 Received /quest command from Minecraft', 'info');
-    addLogMessage('⚙️ Generating 5 candidate quests...', 'info');
-    addLogMessage('🧠 ML ranking in progress...', 'info');
+    addLogMessage('Received /quest command from Minecraft', 'info');
+    addLogMessage('Generating 5 candidate quests...', 'info');
+    addLogMessage('ML ranking in progress...', 'info');
     
     setTimeout(async () => {
         const candidates = await loadCandidates();
@@ -109,12 +109,29 @@ export async function loadStatsData() {
     return { ...FALLBACK_DATA.statsSummary };
 }
 
+export function loadSettingsFromStorage() {
+    const savedThreshold = localStorage.getItem('ml_threshold');
+    const savedCandidates = localStorage.getItem('candidates_count');
+    const savedEndpoint = localStorage.getItem('api_endpoint');
+    
+    if (savedThreshold) CONFIG.ML_THRESHOLD = parseFloat(savedThreshold);
+    if (savedCandidates) CONFIG.CANDIDATES_COUNT = parseInt(savedCandidates);
+    if (savedEndpoint) CONFIG.API_BASE = savedEndpoint.replace('/rank', '');
+    
+    addConsoleLine(`Settings loaded: Threshold=${CONFIG.ML_THRESHOLD}, Candidates=${CONFIG.CANDIDATES_COUNT}`);
+    addConsoleLine(`API Endpoint: ${CONFIG.API_BASE}/rank`);
+}
+
 export function saveSettings(settings) {
     localStorage.setItem('ml_threshold', settings.ml_threshold);
     localStorage.setItem('candidates_count', settings.candidates_count);
     localStorage.setItem('api_endpoint', settings.api_endpoint);
     
+    CONFIG.ML_THRESHOLD = settings.ml_threshold;
+    CONFIG.CANDIDATES_COUNT = settings.candidates_count;
     CONFIG.API_BASE = settings.api_endpoint.replace('/rank', '');
     
-    addLogMessage(`Settings saved: Threshold=${settings.ml_threshold}`, 'success');
+    addLogMessage(`Settings saved: Threshold=${settings.ml_threshold}, Candidates=${settings.candidates_count}`, 'success');
+    addConsoleLine(`Settings applied: Threshold=${CONFIG.ML_THRESHOLD}, Candidates=${CONFIG.CANDIDATES_COUNT}`);
+    addConsoleLine(`API Endpoint: ${CONFIG.API_BASE}/rank`);
 }

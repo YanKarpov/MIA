@@ -1,7 +1,9 @@
 import numpy as np
 from app.database import get_db_connection
-from app.model import fit
+from app.model import fit, model
+import app.model as model_module
 from app.logger import ml_logger
+from sklearn.metrics import accuracy_score, f1_score
 
 THRESHOLD = 5
 last_train_count = 0
@@ -66,25 +68,43 @@ def load_data():
 
 
 def train_model():
-    """Обучает модель если накопилось достаточно новых данных"""
+    """Обучает модель если накопилось достаточно новых данных и возвращает метрики"""
     global last_train_count
 
     current_count = get_records_count()
 
     if current_count < THRESHOLD:
         ml_logger.info(f"Недостаточно данных: {current_count}/{THRESHOLD}")
-        return
+        return {
+            "status": "insufficient_data",
+            "message": f"Need {THRESHOLD - current_count} more samples",
+            "accuracy": 0,
+            "f1_score": 0,
+            "samples": current_count
+        }
 
     new_data_count = current_count - last_train_count
     if new_data_count < THRESHOLD and last_train_count > 0:
         ml_logger.info(f"Новых данных недостаточно: {new_data_count}/{THRESHOLD}")
-        return
+        return {
+            "status": "insufficient_new_data",
+            "message": f"Need {THRESHOLD - new_data_count} more new samples",
+            "accuracy": 0,
+            "f1_score": 0,
+            "samples": current_count
+        }
 
     X, y = load_data()
 
     if len(X) == 0:
         ml_logger.warning("Нет данных для обучения")
-        return
+        return {
+            "status": "no_data",
+            "message": "No training data available",
+            "accuracy": 0,
+            "f1_score": 0,
+            "samples": 0
+        }
 
     ml_logger.info("")
     ml_logger.info("Начинаю обучение модели...")
@@ -92,7 +112,28 @@ def train_model():
     ml_logger.info(f"Успешных: {sum(y)}/{len(X)} ({sum(y)/len(X)*100:.1f}%)")
     ml_logger.info(f"Признаки: смерти_до, убийства_до, сложность, успешность_до")
 
+    # Обучаем модель
     fit(X, y)
+
+    # Получаем актуальное состояние модели через модуль
+    is_model_trained = model_module.is_trained
+    current_model = model_module.model
+
+    # Рассчитываем метрики
+    if is_model_trained:
+        y_pred = current_model.predict(X)
+        accuracy = accuracy_score(y, y_pred)
+        f1 = f1_score(y, y_pred, average='weighted')
+        
+        # Сохраняем метрики в лог
+        ml_logger.info("")
+        ml_logger.info("МЕТРИКИ МОДЕЛИ:")
+        ml_logger.info(f"Точность (Accuracy): {accuracy:.3f} ({accuracy*100:.1f}%)")
+        ml_logger.info(f"F1 Score: {f1:.3f}")
+    else:
+        accuracy = 0
+        f1 = 0
+        ml_logger.warning("Модель не обучилась")
 
     last_train_count = current_count
 
@@ -100,16 +141,30 @@ def train_model():
     ml_logger.info(f"Новых примеров добавлено: {new_data_count if last_train_count > 0 else len(X)}")
     ml_logger.info("=" * 50)
 
+    return {
+        "status": "trained" if is_model_trained else "failed",
+        "message": "Model trained successfully" if is_model_trained else "Training failed",
+        "accuracy": accuracy,
+        "f1_score": f1,
+        "samples": len(X)
+    }
+
 
 def force_train():
-    """Принудительное обучение модели (игнорирует порог новых данных)"""
+    """Принудительное обучение модели (игнорирует порог новых данных) и возвращает метрики"""
     global last_train_count
     
     X, y = load_data()
     
     if len(X) == 0:
         ml_logger.warning("Нет данных для обучения")
-        return False
+        return {
+            "status": "no_data",
+            "message": "No training data available",
+            "accuracy": 0,
+            "f1_score": 0,
+            "samples": 0
+        }
     
     ml_logger.info("")
     ml_logger.info("Принудительное обучение модели...")
@@ -117,10 +172,31 @@ def force_train():
     
     fit(X, y)
     
+    # Получаем актуальное состояние модели через модуль
+    is_model_trained = model_module.is_trained
+    current_model = model_module.model
+    
+    # Рассчитываем метрики
+    if is_model_trained:
+        y_pred = current_model.predict(X)
+        accuracy = accuracy_score(y, y_pred)
+        f1 = f1_score(y, y_pred, average='weighted')
+    else:
+        accuracy = 0
+        f1 = 0
+    
     last_train_count = get_records_count()
     
     ml_logger.info(f"Модель обучена на {len(X)} примерах")
-    return True
+    ml_logger.info(f"Accuracy: {accuracy:.3f}, F1 Score: {f1:.3f}")
+    
+    return {
+        "status": "trained" if is_model_trained else "failed",
+        "message": "Model trained successfully" if is_model_trained else "Training failed",
+        "accuracy": accuracy,
+        "f1_score": f1,
+        "samples": len(X)
+    }
 
 
 def get_training_stats():

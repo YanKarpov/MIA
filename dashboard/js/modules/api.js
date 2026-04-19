@@ -61,10 +61,9 @@ export async function checkMLHealth() {
 }
 
 export async function loadCandidates() {
-    // Сначала пытаемся загрузить реальные предсказания из БД
     const predictions = await fetchLatestPredictions();
     if (predictions && predictions.length > 0) {
-        const candidates = predictions.map((p, idx) => ({
+        let candidates = predictions.map((p, idx) => ({
             id: idx,
             type: p.type,
             target: p.target,
@@ -72,8 +71,20 @@ export async function loadCandidates() {
             reward: p.reward,
             mlScore: p.score
         }));
-        addLogMessage(`Loaded ${candidates.length} real predictions from DB`, 'success');
-        return candidates;
+        
+        // Применяем порог ML модели
+        const threshold = CONFIG.ML_THRESHOLD !== undefined ? CONFIG.ML_THRESHOLD : 0.5;
+        const filteredCandidates = candidates.filter(c => c.mlScore >= threshold);
+        
+        if (filteredCandidates.length > 0) {
+            addLogMessage(`Loaded ${filteredCandidates.length}/${candidates.length} candidates (threshold=${threshold})`, 'success');
+            return filteredCandidates;
+        } else {
+            // Если после фильтрации ничего не осталось — берём лучшего кандидата
+            const bestCandidate = [...candidates].sort((a, b) => b.mlScore - a.mlScore)[0];
+            addLogMessage(`No candidates passed threshold ${threshold}, showing best candidate (score=${bestCandidate.mlScore})`, 'warning');
+            return [bestCandidate];
+        }
     }
     
     // Fallback на демо-данные

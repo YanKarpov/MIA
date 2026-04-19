@@ -1,116 +1,73 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MIA Dashboard Статистика</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <!--#include virtual="/components/header.html" -->
+      <!--#include virtual="/components/header.html" -->
 
-        <!--#include virtual="/components/navbar.html" -->
+      <!--#include virtual="/components/navbar.html" -->
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">🎯</div>
-                <div class="stat-info">
-                    <span class="stat-label">Точность Модели</span>
-                    <div class="stat-value-wrapper">
-                        <span class="stat-value" id="statAccuracy">—</span>
-                        <span class="stat-unit">%</span>
-                    </div>
-                </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-info">
+            <span class="stat-label">Лучший игрок</span>
+            <div class="stat-value-wrapper">
+              <span class="stat-value" id="topPlayer">—</span>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">⚡</div>
-                <div class="stat-info">
-                    <span class="stat-label">Средняя Задержка</span>
-                    <div class="stat-value-wrapper">
-                        <span class="stat-value" id="statLatency">—</span>
-                        <span class="stat-unit">ms</span>
-                    </div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">📊</div>
-                <div class="stat-info">
-                    <span class="stat-label">Всего запросов</span>
-                    <div class="stat-value-wrapper">
-                        <span class="stat-value" id="statRequests">—</span>
-                    </div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">⭐</div>
-                <div class="stat-info">
-                    <span class="stat-label">Средняя ML оценка</span>
-                    <div class="stat-value-wrapper">
-                        <span class="stat-value" id="statAvgScore">—</span>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
-
-        <div class="chart-container">
-            <div class="chart-title">Распределение типов квестов</div>
-            <canvas id="questTypeChart" height="200"></canvas>
-        </div>
-
-        <div class="chart-container">
-            <div class="chart-title">Динамика ML Score (последние 10 квестов)</div>
-            <canvas id="mlScoreChart" height="200"></canvas>
-        </div>
-
-        <div class="chart-container">
-            <div class="chart-title">Распределение задержки (мс)</div>
-            <canvas id="latencyChart" height="200"></canvas>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">🏆</div>
-                <div class="stat-info">
-                    <span class="stat-label">Лучший игрок</span>
-                    <div class="stat-value-wrapper">
-                        <span class="stat-value" id="topPlayer">—</span>
-                    </div>
-                </div>
+        <div class="stat-card">
+          <div class="stat-icon">💀</div>
+          <div class="stat-info">
+            <span class="stat-label">Самый активный</span>
+            <div class="stat-value-wrapper">
+              <span class="stat-value" id="mostActive">—</span>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">💀</div>
-                <div class="stat-info">
-                    <span class="stat-label">Самый активный</span>
-                    <div class="stat-value-wrapper">
-                        <span class="stat-value" id="mostActive">—</span>
-                    </div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">📈</div>
-                <div class="stat-info">
-                    <span class="stat-label">Успешность</span>
-                    <div class="stat-value-wrapper">
-                        <span class="stat-value" id="successRate">—</span>
-                        <span class="stat-unit">%</span>
-                    </div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🤖</div>
-                <div class="stat-info">
-                    <span class="stat-label">ML Model</span>
-                    <div class="stat-value-wrapper">
-                        <span class="stat-value">MIA‑Rank</span>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
+        <div class="stat-card">
+          <div class="stat-icon">📈</div>
+          <div class="stat-info">
+            <span class="stat-label">Успешность</span>
+            <div class="stat-value-wrapper">
+              <span class="stat-value" id="successRate">—</span>
+              <span class="stat-unit">%</span>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🤖</div>
+          <div class="stat-info">
+            <span class="stat-label">ML Model</span>
+            <div class="stat-value-wrapper">
+              <span class="stat-value">MIA‑Rank</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-title">Распределение типов квестов</div>
+        <canvas id="questTypeChart" height="200"></canvas>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-title">Динамика ML Score (последние 10 квестов)</div>
+        <canvas id="mlScoreChart" height="200"></canvas>
+      </div>
     </div>
 
     <script type="module" src="js/main.js"></script>
-</body>
+  </body>
 </html>
