@@ -19,10 +19,14 @@ public class QuestService {
 
     private final DBConnector db;
     private final MLClient mlClient;
+    private final int candidatesCount;
+    private final double mlThreshold;
 
-    public QuestService(DBConnector db) {
+    public QuestService(DBConnector db, int candidatesCount, double mlThreshold) {
         this.db = db;
         this.mlClient = new MLClient();
+        this.candidatesCount = candidatesCount;
+        this.mlThreshold = mlThreshold;
     }
 
     public int createQuest(Player player) throws SQLException {
@@ -55,15 +59,16 @@ public class QuestService {
         gamePlayer.setLeastFavoriteType(getLeastFavoriteQuestType(playerId));
         gamePlayer.setPreferredTarget(getPreferredTarget(playerId));
 
+        // Используем количество кандидатов из конфига
         List<QuestCandidate> candidates = new ArrayList<>();
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < candidatesCount; i++) {
             Quest q = QuestGenerator.generateQuest(gamePlayer, location);
             QuestDTO dto = new QuestDTO(q.getAmount());
             candidates.add(new QuestCandidate(q, dto));
         }
 
-        System.out.println("--- CANDIDATES ---");
+        System.out.println("--- CANDIDATES (" + candidatesCount + ") ---");
         for (int i = 0; i < candidates.size(); i++) {
             Quest q = candidates.get(i).getQuest();
             System.out.println("Candidate " + i + ": " + 
@@ -100,7 +105,8 @@ public class QuestService {
             }
         }
 
-        int bestIndex = chooseBestQuest(results, candidates);
+        // Применяем порог для выбора лучшего кандидата
+        int bestIndex = chooseBestQuestWithThreshold(results, candidates);
 
         System.out.println("=== SELECTED QUEST ===");
         System.out.println("Best index: " + bestIndex);
@@ -119,6 +125,7 @@ public class QuestService {
                            ", amount=" + bestQuest.getAmount() + 
                            ", reward=" + bestQuest.getReward());
         System.out.println("ML Score: " + bestScore);
+        System.out.println("Threshold used: " + mlThreshold);
 
         int questId = db.saveQuest(playerId, bestQuest, gamePlayer, bestScore, true);
         
@@ -135,6 +142,57 @@ public class QuestService {
         db.updateLastQuestType(playerId, bestQuest.getType());
 
         return questId;
+    }
+
+    private int chooseBestQuestWithThreshold(List<RankResponse> responses, List<QuestCandidate> candidates) {
+        if (responses == null || responses.isEmpty()) {
+            int easiestIndex = 0;
+            for (int i = 1; i < candidates.size(); i++) {
+                if (candidates.get(i).getQuest().getAmount() < candidates.get(easiestIndex).getQuest().getAmount()) {
+                    easiestIndex = i;
+                }
+            }
+            System.out.println("Fallback: выбран лёгкий квест (amount=" + 
+                               candidates.get(easiestIndex).getQuest().getAmount() + ")");
+            return easiestIndex;
+        }
+
+        // Фильтруем кандидатов по порогу
+        List<Integer> validIndices = new ArrayList<>();
+        for (int i = 0; i < responses.size(); i++) {
+            if (responses.get(i).getScore() >= mlThreshold) {
+                validIndices.add(i);
+            }
+        }
+        
+        System.out.println("Threshold filter: " + validIndices.size() + "/" + responses.size() + 
+                           " candidates passed (threshold=" + mlThreshold + ")");
+        
+        if (validIndices.isEmpty()) {
+            // Если все ниже порога — берём лучшего
+            System.out.println("No candidates passed threshold, selecting best overall");
+            RankResponse best = responses.get(0);
+            int bestIndex = 0;
+            for (int i = 1; i < responses.size(); i++) {
+                if (responses.get(i).getScore() > best.getScore()) {
+                    best = responses.get(i);
+                    bestIndex = i;
+                }
+            }
+            return bestIndex;
+        }
+        
+        // Выбираем лучшего среди прошедших порог
+        int bestIndex = validIndices.get(0);
+        double bestScore = responses.get(bestIndex).getScore();
+        for (int idx : validIndices) {
+            if (responses.get(idx).getScore() > bestScore) {
+                bestScore = responses.get(idx).getScore();
+                bestIndex = idx;
+            }
+        }
+        
+        return bestIndex;
     }
 
     private int chooseBestQuest(List<RankResponse> responses, List<QuestCandidate> candidates) {
