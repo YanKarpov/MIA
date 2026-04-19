@@ -27,15 +27,23 @@ public class QuestPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getLogger().info("QuestPlugin enabled");
+        getLogger().info("=== MIA Quest AI Plugin ===");
 
         try {
             db = new DBConnector();
             questService = new QuestService(db);
             commandService = new CommandService(this, questService);
+            getLogger().info("Подключение к базе данных установлено");
+            
+            // Выводим текущие настройки из БД
+            getLogger().info("Текущие настройки из БД:");
+            getLogger().info("  Количество кандидатов: " + db.getCandidatesCount());
+            getLogger().info("  Порог ML модели: " + db.getMlThreshold());
+            
         } catch (SQLException e) {
             e.printStackTrace();
-            getLogger().severe("Failed to connect to database!");
+            getLogger().severe("Ошибка подключения к базе данных!");
+            return;
         }
 
         getServer().getPluginManager().registerEvents(new QuestListener(this), this);
@@ -52,11 +60,13 @@ public class QuestPlugin extends JavaPlugin {
                 }
             }
         }.runTaskTimer(this, 0L, 20L);
+        
+        getLogger().info("Плагин MIA Quest AI успешно загружен!");
     }
 
     @Override
     public void onDisable() {
-        getLogger().info("QuestPlugin disabled");
+        getLogger().info("Плагин MIA Quest AI выгружен");
         if (db != null) db.close();
     }
 

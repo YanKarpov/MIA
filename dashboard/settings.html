@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIA Dashboard — Управление ML</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!--#include virtual="/components/header.html" -->
+        <!--#include virtual="/components/navbar.html" -->
+
+        <div class="card">
+            <div class="card-header">
+                <h2>⚙️ Управление ML моделью</h2>
+                <button class="refresh-btn" id="saveSettingsBtn">Сохранить</button>
+            </div>
+            <div class="card-body">
+                <div class="setting-group">
+                    <label class="setting-label">Порог ML модели</label>
+                    <input type="range" id="mlThreshold" min="0" max="1" step="0.01" value="0.5">
+                    <span id="thresholdValue">0.50</span>
+                    <p class="setting-hint">Кандидаты с оценкой ниже порога не предлагаются игроку</p>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">Количество кандидатов</label>
+                    <input type="number" id="candidatesCount" value="5" min="1" max="30" class="setting-input">
+                    <p class="setting-hint">Сколько вариантов квеста генерируется за раз</p>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">API Endpoint</label>
+                    <input type="text" id="apiEndpoint" value="/api/rank" class="setting-input">
+                    <p class="setting-hint">Адрес ML сервиса (можно сменить при переносе)</p>
+                </div>
+
+                <hr class="settings-divider">
+
+                <div class="setting-group">
+                    <button class="refresh-btn" id="trainModelBtn">🔄 Обновить модель</button>
+                    <p class="setting-hint">Дообучение на накопленных данных из таблицы quests</p>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">Текущий статус</label>
+                    <p id="modelStatus" class="setting-status">🟢 Модель загружена, готова к работе</p>
+                </div>
+
+                <hr class="settings-divider">
+
+                <div class="setting-group">
+                    <label class="setting-label">📊 Метрики обучения</label>
+                    <div id="trainMetrics" class="train-metrics">
+                        <div class="metric-item">
+                            <span class="metric-label">Точность (Accuracy):</span>
+                            <span id="metricAccuracy" class="metric-value">—</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">F1 Score:</span>
+                            <span id="metricF1" class="metric-value">—</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Количество образцов:</span>
+                            <span id="metricSamples" class="metric-value">—</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Последнее обучение:</span>
+                            <span id="metricTime" class="metric-value">—</span>
+                        </div>
+                    </div>
+                    <p class="setting-hint">Метрики обновляются после успешного обучения модели</p>
+                </div>
+
+                <hr class="settings-divider">
+
+                <div class="setting-group">
+                    <p><strong>ML модель:</strong> MIA Rank</p>
+                    <p><strong>Версия дашборда:</strong> 1.0.0</p>
+                    <p><strong>Разработчик:</strong> Карпов Я.А.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

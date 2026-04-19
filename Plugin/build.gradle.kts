@@ -76,6 +76,10 @@ tasks.register<Delete>("cleanPlugins") {
     })
 }
 
+tasks.register<Delete>("cleanPluginConfig") {
+    delete("../minecraft/plugins/QuestAIPlugin")
+}
+
 tasks.register<Copy>("copyToServer") {
     dependsOn("fatJar")
     from(layout.buildDirectory.file("libs/QuestAIPlugin-${version}.jar"))
@@ -88,6 +92,7 @@ tasks.register<Exec>("restartServer") {
 
 tasks.register("deploy") {
     dependsOn("cleanPlugins")
+    dependsOn("cleanPluginConfig")
     dependsOn("copyToServer")
     finalizedBy("restartServer")
 }
