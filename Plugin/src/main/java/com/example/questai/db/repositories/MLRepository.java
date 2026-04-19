@@ -13,10 +13,13 @@ public class MLRepository {
         this.db = db;
     }
     
-    public void saveMlPrediction(int questId, int candidateIndex, double predictedScore, boolean wasSelected) throws SQLException {
+    public void saveMlPrediction(int questId, int candidateIndex, double predictedScore, 
+                                  boolean wasSelected, Quest candidate) throws SQLException {
         String sql = """
-            INSERT INTO ml_predictions (quest_id, candidate_index, predicted_score, was_selected)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO ml_predictions (
+                quest_id, candidate_index, predicted_score, was_selected,
+                type, target, amount, reward
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """;
         
         try (PreparedStatement stmt = db.getConnection().prepareStatement(sql)) {
@@ -24,6 +27,10 @@ public class MLRepository {
             stmt.setInt(2, candidateIndex);
             stmt.setDouble(3, predictedScore);
             stmt.setBoolean(4, wasSelected);
+            stmt.setString(5, candidate.getType());
+            stmt.setString(6, candidate.getTarget());
+            stmt.setInt(7, candidate.getAmount());
+            stmt.setInt(8, candidate.getReward());
             stmt.executeUpdate();
         }
     }

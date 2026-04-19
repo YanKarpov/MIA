@@ -70,13 +70,11 @@ public class QuestPlugin extends JavaPlugin {
 
         if (command.getName().equalsIgnoreCase("quest")) {
             
-            // Отмена квеста
             if (args.length > 0 && args[0].equalsIgnoreCase("cancel")) {
                 commandService.cancelQuest(player);
                 return true;
             }
             
-            // Создание нового квеста
             commandService.createNewQuest(player);
             return true;
         }
