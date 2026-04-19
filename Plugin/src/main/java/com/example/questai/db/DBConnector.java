@@ -4,6 +4,8 @@ import com.example.questai.db.repositories.*;
 import com.example.questai.model.Player;
 import com.example.questai.model.Quest;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.ResultSet;
 import java.util.List;
 
 public class DBConnector {
@@ -22,6 +24,7 @@ public class DBConnector {
         
         createTablesIfNotExist();
         upgradeTablesIfNeeded();
+        createSettingsTableIfNotExist();
     }
     
     private void createTablesIfNotExist() throws SQLException {
@@ -84,6 +87,30 @@ public class DBConnector {
         }
     }
     
+    private void createSettingsTableIfNotExist() throws SQLException {
+        String createSettings = """
+            CREATE TABLE IF NOT EXISTS settings (
+                id SERIAL PRIMARY KEY,
+                key VARCHAR(50) UNIQUE NOT NULL,
+                value TEXT NOT NULL,
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+            """;
+        
+        String insertDefaults = """
+            INSERT INTO settings (key, value) VALUES 
+                ('candidates_count', '5'),
+                ('ml_threshold', '0.5')
+            ON CONFLICT (key) DO NOTHING;
+            """;
+        
+        try (var stmt = dbConnection.getConnection().createStatement()) {
+            stmt.execute(createSettings);
+            stmt.execute(insertDefaults);
+            System.out.println("[DBConnector] Settings table created/verified");
+        }
+    }
+    
     private void upgradeTablesIfNeeded() throws SQLException {
         String[] alterStatements = {
             "ALTER TABLE players ADD COLUMN IF NOT EXISTS total_deaths INT DEFAULT 0",
@@ -119,7 +146,43 @@ public class DBConnector {
         }
     }
     
-    // Делегируем методы репозиториям
+    
+    public int getCandidatesCount() throws SQLException {
+        String sql = "SELECT value FROM settings WHERE key = 'candidates_count'";
+        try (Statement stmt = dbConnection.getConnection().createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return Integer.parseInt(rs.getString("value"));
+            }
+        }
+        return 5;
+    }
+    
+    public double getMlThreshold() throws SQLException {
+        String sql = "SELECT value FROM settings WHERE key = 'ml_threshold'";
+        try (Statement stmt = dbConnection.getConnection().createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return Double.parseDouble(rs.getString("value"));
+            }
+        }
+        return 0.5;
+    }
+    
+    public void updateCandidatesCount(int count) throws SQLException {
+        String sql = "UPDATE settings SET value = '" + count + "', updated_at = NOW() WHERE key = 'candidates_count'";
+        try (Statement stmt = dbConnection.getConnection().createStatement()) {
+            stmt.executeUpdate(sql);
+        }
+    }
+    
+    public void updateMlThreshold(double threshold) throws SQLException {
+        String sql = "UPDATE settings SET value = '" + threshold + "', updated_at = NOW() WHERE key = 'ml_threshold'";
+        try (Statement stmt = dbConnection.getConnection().createStatement()) {
+            stmt.executeUpdate(sql);
+        }
+    }
+    
     
     public void savePlayer(String uuid, String name) throws SQLException {
         playerRepository.savePlayer(uuid, name);
@@ -197,24 +260,20 @@ public class DBConnector {
         preferencesRepository.updateLastQuestType(playerId, questType);
     }
     
-    // Обновлённый метод с передачей объекта Quest
     public void saveMlPrediction(int questId, int candidateIndex, double predictedScore, 
                                   boolean wasSelected, Quest candidate) throws SQLException {
         mlRepository.saveMlPrediction(questId, candidateIndex, predictedScore, wasSelected, candidate);
     }
     
-    // Сохранение всех предсказаний
     public void saveAllMlPredictions(int questId, List<Quest> candidates, 
                                       double[] scores, int bestIndex) throws SQLException {
         mlRepository.saveAllPredictions(questId, candidates, scores, bestIndex);
     }
     
-    // Получение последних предсказаний для дашборда
     public List<MLRepository.MlPredictionWithQuest> getLatestPredictions(int limit) throws SQLException {
         return mlRepository.getLatestPredictions(limit);
     }
     
-    // Метод для обучения модели
     public List<Quest> getQuestsForTraining(int playerId, int limit) throws SQLException {
         return mlRepository.getQuestsForTraining(playerId, limit);
     }

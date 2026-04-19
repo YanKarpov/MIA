@@ -24,30 +24,22 @@ public class QuestPlugin extends JavaPlugin {
     private DBConnector db;
     private QuestService questService;
     private CommandService commandService;
-    
-    private int candidatesCount;
-    private double mlThreshold;
-    private String mlServiceUrl;
 
     @Override
     public void onEnable() {
         getLogger().info("=== MIA Quest AI Plugin ===");
-        
-        saveDefaultConfig();
-        
-        reloadConfig();
-        loadConfig();
-        
-        getLogger().info("Конфигурация ML:");
-        getLogger().info("  Количество кандидатов: " + candidatesCount);
-        getLogger().info("  Порог ML модели: " + mlThreshold);
-        getLogger().info("  URL ML сервиса: " + mlServiceUrl);
 
         try {
             db = new DBConnector();
-            questService = new QuestService(db, candidatesCount, mlThreshold);
+            questService = new QuestService(db);
             commandService = new CommandService(this, questService);
             getLogger().info("Подключение к базе данных установлено");
+            
+            // Выводим текущие настройки из БД
+            getLogger().info("Текущие настройки из БД:");
+            getLogger().info("  Количество кандидатов: " + db.getCandidatesCount());
+            getLogger().info("  Порог ML модели: " + db.getMlThreshold());
+            
         } catch (SQLException e) {
             e.printStackTrace();
             getLogger().severe("Ошибка подключения к базе данных!");
@@ -76,24 +68,6 @@ public class QuestPlugin extends JavaPlugin {
     public void onDisable() {
         getLogger().info("Плагин MIA Quest AI выгружен");
         if (db != null) db.close();
-    }
-    
-    private void loadConfig() {
-        candidatesCount = getConfig().getInt("ml.candidates_count", 5);
-        mlThreshold = getConfig().getDouble("ml.threshold", 0.5);
-        mlServiceUrl = getConfig().getString("ml.ml_service_url", "http://ml-service:8000");
-    }
-    
-    public int getCandidatesCount() {
-        return candidatesCount;
-    }
-    
-    public double getMlThreshold() {
-        return mlThreshold;
-    }
-    
-    public String getMlServiceUrl() {
-        return mlServiceUrl;
     }
 
     @Override

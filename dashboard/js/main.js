@@ -171,6 +171,29 @@ async function initStatsPage() {
     addConsoleLine(`Точность ML: ${statsData.accuracy || 94}%, Средняя задержка: ${statsData.avg_latency || 87}ms`);
 }
 
+async function saveSettingsToDB(settings) {
+    try {
+        const response = await fetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                candidates_count: settings.candidates_count,
+                ml_threshold: settings.ml_threshold
+            })
+        });
+        if (response.ok) {
+            addConsoleLine('Настройки сохранены в базу данных');
+            return true;
+        } else {
+            addConsoleLine(`Ошибка сохранения в БД: HTTP ${response.status}`);
+            return false;
+        }
+    } catch (e) {
+        addConsoleLine(`Ошибка сохранения в БД: ${e.message}`);
+        return false;
+    }
+}
+
 async function initSettingsPage() {
     console.log('Initializing Settings Page...');
     
@@ -198,13 +221,14 @@ async function initSettingsPage() {
     
     const saveBtn = document.getElementById('saveSettingsBtn');
     if (saveBtn) {
-        saveBtn.addEventListener('click', () => {
+        saveBtn.addEventListener('click', async () => {
             const settings = {
                 ml_threshold: parseFloat(thresholdInput?.value || 0.5),
                 candidates_count: parseInt(candidatesInput?.value || 5),
                 api_endpoint: endpointInput?.value || '/api/rank'
             };
-            saveSettings(settings);
+            saveSettings(settings); // в localStorage
+            await saveSettingsToDB(settings); // в БД
             addConsoleLine(`Настройки сохранены: Порог=${settings.ml_threshold}, Кандидатов=${settings.candidates_count}`);
             addConsoleLine(`API Endpoint: ${settings.api_endpoint}`);
         });
