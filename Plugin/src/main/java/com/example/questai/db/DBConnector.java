@@ -181,6 +181,16 @@ public class DBConnector {
             stmt.executeUpdate(sql);
         }
     }
+
+    public void expireStaleQuests() throws SQLException {
+        String sql = "UPDATE quests SET status = 'EXPIRED' WHERE status = 'IN_PROGRESS'";
+        try (Statement stmt = dbConnection.getConnection().createStatement()) {
+            int updated = stmt.executeUpdate(sql);
+            if (updated > 0) {
+                System.out.println("[DBConnector] Expired " + updated + " stale quests (IN_PROGRESS → EXPIRED)");
+            }
+        }
+    }
     
     public void savePlayer(String uuid, String name) throws SQLException {
         playerRepository.savePlayer(uuid, name);

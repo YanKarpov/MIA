@@ -27,6 +27,7 @@ services:
     environment:
       EULA: "true"
       TYPE: "PAPER"
+      ONLINE_MODE: "false"
       VERSION: ${MINECRAFT_VERSION:-1.21.11}
       MEMORY: ${MINECRAFT_MEMORY:-2G}
       OPS: ${MINECRAFT_OPS:-LupusHex}
