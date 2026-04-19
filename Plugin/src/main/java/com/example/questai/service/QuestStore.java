@@ -27,7 +27,6 @@ public class QuestStore {
         for (RankResponse r : results) {
             QuestCandidate candidate = candidates.get(r.getQuestIndex());
             Quest quest = candidate.getQuest();
-            // 5 аргументов: questId, index, score, wasSelected, quest
             db.saveMlPrediction(questId, r.getQuestIndex(), r.getScore(), 
                                 r.getQuestIndex() == bestIndex, quest);
         }
