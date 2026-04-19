@@ -18,6 +18,14 @@ Plugin/*.jar
 Plugin/.gradletasknamecache
 Plugin/gradle-app.setting
 
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+
+
 .vscode/
 .idea/
 *.iml
