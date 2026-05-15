@@ -28,4 +28,8 @@ public class QuestProgress {
     public void increment() {
         current++;
     }
+
+    public boolean isCompleted() {
+        return current >= quest.getAmount();
+}
 }

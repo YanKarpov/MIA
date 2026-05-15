@@ -5,80 +5,103 @@ DECLARE
     targets TEXT[];
     target TEXT;
     amount INT;
+    reward INT;
     success BOOLEAN;
-    kills INT := 0;
-    deaths INT := 0;
-    completed INT := 0;
-    total INT := 0;
-    success_rate FLOAT;
-    percent INT;
+    player_id INT := 33;
+    successful_quests INT := 0;
+    failed_quests INT := 0;
+    total_kills_before INT := 0;
+    total_deaths_before INT := 0;
+    success_rate_before FLOAT := 0.0;
+    quest_date TIMESTAMP;
+    kills_gained INT;
+    deaths_gained INT;
 BEGIN
-    FOR i IN 1..100 LOOP
-        quest_type := (ARRAY['Kill', 'Collect', 'Break'])[floor(random() * 3 + 1)];
+    FOR i IN 1..500 LOOP
         
-        IF quest_type = 'Kill' THEN
-            targets := ARRAY['ZOMBIE', 'SKELETON', 'SPIDER', 'CREEPER'];
-        ELSIF quest_type = 'Collect' THEN
-            targets := ARRAY['STICK', 'IRON_INGOT', 'DIAMOND'];
+        IF i < 150 THEN
+            quest_type := (ARRAY['KILL', 'KILL', 'KILL', 'COLLECT', 'BREAK'])[floor(random() * 5 + 1)];
+        ELSIF i < 350 THEN
+            quest_type := (ARRAY['KILL', 'COLLECT', 'BREAK'])[floor(random() * 3 + 1)];
         ELSE
-            targets := ARRAY['STONE', 'COBBLESTONE', 'DIRT'];
-        END IF;
-        target := targets[floor(random() * array_length(targets, 1) + 1)];
-        
-        -- Сложность зависит от прогресса
-        IF i < 30 THEN
-            amount := floor(random() * 5 + 1);  -- 1-5
-            success := random() < 0.9;
-        ELSIF i < 70 THEN
-            amount := floor(random() * 15 + 5); -- 5-20
-            success := random() < 0.6;
-        ELSE
-            amount := floor(random() * 30 + 20); -- 20-50
-            success := random() < 0.3;
+            quest_type := (ARRAY['KILL', 'COLLECT', 'COLLECT', 'BREAK', 'BREAK'])[floor(random() * 5 + 1)];
         END IF;
         
-        -- Сохраняем состояние ДО
-        success_rate := completed::FLOAT / NULLIF(total, 0);
+        IF quest_type = 'KILL' THEN
+            targets := ARRAY['ZOMBIE', 'SKELETON', 'SPIDER', 'CREEPER', 'ENDERMAN', 'WITCH', 'DROWNED'];
+            target := targets[floor(random() * array_length(targets, 1) + 1)];
+        ELSIF quest_type = 'COLLECT' THEN
+            targets := ARRAY['ROTTEN_FLESH', 'STRING', 'FEATHER', 'BONE', 'GUNPOWDER', 'ENDER_PEARL', 'SPIDER_EYE'];
+            target := targets[floor(random() * array_length(targets, 1) + 1)];
+        ELSE
+            targets := ARRAY['STONE', 'GRAVEL', 'DIRT', 'COBBLESTONE', 'SAND', 'SANDSTONE', 'GRANITE'];
+            target := targets[floor(random() * array_length(targets, 1) + 1)];
+        END IF;
+        
+        IF i < 100 THEN
+            amount := floor(random() * 5 + 1);
+            reward := amount * 6 + floor(random() * 10);
+            success := random() < 0.85;
+        ELSIF i < 250 THEN
+            amount := floor(random() * 12 + 3);
+            reward := amount * 5 + floor(random() * 20);
+            success := random() < 0.65;
+        ELSIF i < 400 THEN
+            amount := floor(random() * 20 + 8);
+            reward := amount * 5 + floor(random() * 30);
+            success := random() < 0.45;
+        ELSE
+            amount := floor(random() * 30 + 15);
+            reward := amount * 5 + floor(random() * 50);
+            success := random() < 0.25;
+        END IF;
+        
+        kills_gained := 0;
+        deaths_gained := 0;
+        
+        IF success THEN
+            IF quest_type = 'KILL' THEN
+                kills_gained := amount;
+            END IF;
+        ELSE
+            IF quest_type = 'KILL' THEN
+                deaths_gained := floor(random() * 3 + 1);
+            END IF;
+        END IF;
+        
+        success_rate_before := successful_quests::FLOAT / NULLIF(successful_quests + failed_quests, 0);
+        
+        quest_date := NOW() - (random() * interval '60 days');
         
         INSERT INTO quests (
             player_id, type, target, amount, reward, status,
             deaths_before, kills_before, success_rate_before,
-            deaths_after, kills_after, issued_at, completed_at
+            deaths_after, kills_after,
+            issued_at, completed_at
         ) VALUES (
-            1, quest_type, target, amount, amount * 5,
+            player_id, quest_type, target, amount, reward,
             CASE WHEN success THEN 'COMPLETED' ELSE 'FAILED' END,
-            deaths, kills, COALESCE(success_rate, 0.5),
-            deaths + CASE WHEN NOT success AND quest_type = 'Kill' THEN floor(random() * 3 + 1) ELSE 0 END,
-            kills + CASE WHEN success AND quest_type = 'Kill' THEN amount ELSE 0 END,
-            NOW() - (random() * interval '10 days'),
-            NOW()
+            total_deaths_before, total_kills_before, COALESCE(success_rate_before, 0.5),
+            total_deaths_before + deaths_gained, total_kills_before + kills_gained,
+            quest_date,
+            CASE WHEN success THEN quest_date + interval '1 hour' ELSE NULL END
         );
         
-        -- Обновляем статистику
         IF success THEN
-            completed := completed + 1;
-            IF quest_type = 'Kill' THEN
-                kills := kills + amount;
-            END IF;
+            successful_quests := successful_quests + 1;
+            total_kills_before := total_kills_before + kills_gained;
         ELSE
-            IF quest_type = 'Kill' THEN
-                deaths := deaths + floor(random() * 3 + 1);
-            END IF;
+            failed_quests := failed_quests + 1;
+            total_deaths_before := total_deaths_before + deaths_gained;
         END IF;
-        total := total + 1;
+        
     END LOOP;
     
-    percent := round((completed::FLOAT / total) * 100);
-    RAISE NOTICE 'Готово! Сгенерировано % записей. Успешных: %/% (%)', 
-                 total, completed, total, percent;
+    RAISE NOTICE 'Generation completed for player %', player_id;
+    RAISE NOTICE 'Total quests: %', successful_quests + failed_quests;
+    RAISE NOTICE 'Successful: %', successful_quests;
+    RAISE NOTICE 'Failed: %', failed_quests;
+    RAISE NOTICE 'Total kills: %', total_kills_before;
+    RAISE NOTICE 'Total deaths: %', total_deaths_before;
+    
 END $$;
-
--- Обновляем статистику игрока
-UPDATE players SET 
-    total_deaths = (SELECT COALESCE(SUM(deaths_after), 0) FROM quests WHERE player_id = 1),
-    total_kills = (SELECT COALESCE(SUM(kills_after), 0) FROM quests WHERE player_id = 1),
-    total_quests = (SELECT COUNT(*) FROM quests WHERE player_id = 1),
-    completed_quests = (SELECT COUNT(*) FROM quests WHERE player_id = 1 AND status = 'COMPLETED'),
-    success_rate = (SELECT COALESCE(COUNT(*) FILTER (WHERE status = 'COMPLETED')::FLOAT / NULLIF(COUNT(*), 0), 0) 
-                    FROM quests WHERE player_id = 1)
-WHERE id = 1;

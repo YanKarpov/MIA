@@ -4,12 +4,12 @@ import com.example.questai.QuestPlugin;
 import com.example.questai.model.QuestProgress;
 import com.example.questai.ui.ActionBarUpdater;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
 
 public class QuestListener implements Listener {
 
@@ -23,14 +23,14 @@ public class QuestListener implements Listener {
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         QuestProgress progress = plugin.getActiveQuests().get(player.getUniqueId());
-        if (progress == null) return;
+        if (progress == null || progress.isCompleted()) return;
 
         String questType = progress.getQuest().getType();
         String questTarget = progress.getQuest().getTarget();
-        String blockType = event.getBlock().getType().toString();
+        String blockType = event.getBlock().getType().name();
         
-        if ("Break".equals(questType)) {
-            if (questTarget == null || questTarget.equals("ANY") || blockType.equals(questTarget)) {
+        if ("BREAK".equalsIgnoreCase(questType)) {
+            if (questTarget == null || questTarget.equals("ANY") || blockType.equalsIgnoreCase(questTarget)) {
                 progress.increment();
                 ActionBarUpdater.update(player, progress); 
                 plugin.checkCompletion(player, progress);
@@ -44,14 +44,14 @@ public class QuestListener implements Listener {
 
         Player player = event.getEntity().getKiller();
         QuestProgress progress = plugin.getActiveQuests().get(player.getUniqueId());
-        if (progress == null) return;
+        if (progress == null || progress.isCompleted()) return;
 
         String questType = progress.getQuest().getType();
         String questTarget = progress.getQuest().getTarget();
-        String entityType = event.getEntity().getType().toString();
+        String entityType = event.getEntity().getType().name();
         
-        if ("Kill".equals(questType)) {
-            if (questTarget == null || questTarget.equals("ANY") || entityType.equals(questTarget)) {
+        if ("KILL".equalsIgnoreCase(questType)) {
+            if (questTarget == null || questTarget.equals("ANY") || entityType.equalsIgnoreCase(questTarget)) {
                 progress.increment();
                 ActionBarUpdater.update(player, progress); 
                 plugin.checkCompletion(player, progress);
@@ -60,17 +60,19 @@ public class QuestListener implements Listener {
     }
 
     @EventHandler
-    public void onItemPickup(PlayerPickupItemEvent event) {
-        Player player = event.getPlayer();
+    public void onItemPickup(EntityPickupItemEvent event) {
+        if (!(event.getEntity() instanceof Player)) return;
+        
+        Player player = (Player) event.getEntity();
         QuestProgress progress = plugin.getActiveQuests().get(player.getUniqueId());
-        if (progress == null) return;
+        if (progress == null || progress.isCompleted()) return;
 
         String questType = progress.getQuest().getType();
         String questTarget = progress.getQuest().getTarget();
-        String itemType = event.getItem().getItemStack().getType().toString();
+        String itemType = event.getItem().getItemStack().getType().name();
         
-        if ("Collect".equals(questType)) {
-            if (questTarget == null || questTarget.equals("ANY") || itemType.equals(questTarget)) {
+        if ("COLLECT".equalsIgnoreCase(questType)) {
+            if (questTarget == null || questTarget.equals("ANY") || itemType.equalsIgnoreCase(questTarget)) {
                 progress.increment();
                 ActionBarUpdater.update(player, progress);  
                 plugin.checkCompletion(player, progress);
@@ -81,7 +83,6 @@ public class QuestListener implements Listener {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
-
         QuestProgress progress = plugin.getActiveQuests().get(player.getUniqueId());
         if (progress == null) return;
 
@@ -92,7 +93,6 @@ public class QuestListener implements Listener {
         }
 
         plugin.getActiveQuests().remove(player.getUniqueId());
-
         player.sendMessage("§c❌ Quest failed! You died.");
     }
 }

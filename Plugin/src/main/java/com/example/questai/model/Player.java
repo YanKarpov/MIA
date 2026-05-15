@@ -12,18 +12,14 @@ public class Player {
     private int totalQuests;
     private int completedQuests;
     
-    // ===== НОВЫЕ ПОЛЯ ДЛЯ АНАЛИЗА ПРЕДПОЧТЕНИЙ =====
     private String lastQuestType;
     private int consecutiveSuccesses;
     private String favoriteType;
     private String leastFavoriteType;
     private String preferredTarget;
-    // =============================================
 
-    // Пустой конструктор
     public Player() {}
 
-    // Конструктор для нового игрока
     public Player(String uuid, String name) {
         this.uuid = uuid;
         this.name = name;
@@ -39,7 +35,6 @@ public class Player {
         this.preferredTarget = null;
     }
 
-    // Конструктор с полными данными
     public Player(int id, String uuid, String name, int deaths, int kills, 
                   int totalQuests, int completedQuests, double successRate) {
         this.id = id;
@@ -57,12 +52,10 @@ public class Player {
         this.preferredTarget = null;
     }
 
-    // Преобразование в PlayerDTO для отправки в ML сервис
     public PlayerDTO toDTO() {
         return new PlayerDTO(deaths, kills, successRate);
     }
 
-    // Обновление процента успешности
     public void updateSuccessRate() {
         if (totalQuests > 0) {
             this.successRate = (double) completedQuests / totalQuests;
@@ -71,20 +64,17 @@ public class Player {
         }
     }
 
-    // Добавление успешно выполненного квеста
     public void addCompletedQuest() {
         this.totalQuests++;
         this.completedQuests++;
         updateSuccessRate();
     }
 
-    // Добавление проваленного квеста
     public void addFailedQuest() {
         this.totalQuests++;
         updateSuccessRate();
     }
 
-    // ===== ГЕТТЕРЫ И СЕТТЕРЫ =====
     
     public int getId() {
         return id;
@@ -151,9 +141,7 @@ public class Player {
         this.completedQuests = completedQuests;
         updateSuccessRate();
     }
-    
-    // ===== НОВЫЕ ГЕТТЕРЫ И СЕТТЕРЫ =====
-    
+        
     public String getLastQuestType() {
         return lastQuestType;
     }
@@ -193,7 +181,6 @@ public class Player {
     public void setPreferredTarget(String preferredTarget) {
         this.preferredTarget = preferredTarget;
     }
-    // =================================
 
     @Override
     public String toString() {
